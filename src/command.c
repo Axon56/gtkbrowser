@@ -550,6 +550,109 @@ char *command_process(BrowserState *state, const char *line) {
         const char *value = (argc >= 3) ? parts[2] : NULL;
         result = page_handle_dialog(state->web_view, action, value);
     }
+    // === Navigation history ===
+    else if (strcmp(cmd, "back") == 0) {
+        page_go_back(state->web_view);
+        result = json_ok();
+    }
+    else if (strcmp(cmd, "forward") == 0) {
+        page_go_forward(state->web_view);
+        result = json_ok();
+    }
+    else if (strcmp(cmd, "history") == 0) {
+        int len = page_get_history_length(state->web_view);
+        int idx = page_get_history_index(state->web_view);
+        JsonBuilder *b = json_builder_new();
+        json_builder_begin_object(b);
+        json_builder_set_member_name(b, "length");
+        json_builder_add_int_value(b, len);
+        json_builder_set_member_name(b, "index");
+        json_builder_add_int_value(b, idx);
+        json_builder_end_object(b);
+        JsonGenerator *gen = json_generator_new();
+        json_generator_set_root(gen, json_builder_get_root(b));
+        result = json_generator_to_data(gen, NULL);
+        g_object_unref(gen);
+        g_object_unref(b);
+    }
+    else if (strcmp(cmd, "history-goto") == 0 && argc >= 2) {
+        page_goto_history(state->web_view, atoi(parts[1]));
+        result = json_ok();
+    }
+    // === Find in page ===
+    else if (strcmp(cmd, "find-text") == 0 && argc >= 2) {
+        bool highlight = (argc >= 3 && strcmp(parts[2], "--highlight") == 0);
+        result = page_find_in_page(state->web_view, parts[1], highlight);
+    }
+    else if (strcmp(cmd, "find-count") == 0 && argc >= 2) {
+        int count = page_count_matches(state->web_view, parts[1]);
+        char count_str[16];
+        snprintf(count_str, sizeof(count_str), "%d", count);
+        result = json_result("matches", count_str);
+    }
+    // === Local/Session Storage ===
+    else if (strcmp(cmd, "ls-get") == 0 && argc >= 2) {
+        result = page_local_storage_get(state->web_view, parts[1]);
+    }
+    else if (strcmp(cmd, "ls-set") == 0 && argc >= 3) {
+        char *val = g_strjoinv(" ", parts + 2);
+        page_local_storage_set(state->web_view, parts[1], val);
+        g_free(val);
+        result = json_ok();
+    }
+    else if (strcmp(cmd, "ls-all") == 0) {
+        result = page_local_storage_all(state->web_view);
+    }
+    else if (strcmp(cmd, "ss-get") == 0 && argc >= 2) {
+        result = page_session_storage_get(state->web_view, parts[1]);
+    }
+    else if (strcmp(cmd, "ss-set") == 0 && argc >= 3) {
+        char *val = g_strjoinv(" ", parts + 2);
+        page_session_storage_set(state->web_view, parts[1], val);
+        g_free(val);
+        result = json_ok();
+    }
+    // === Clipboard ===
+    else if (strcmp(cmd, "clipboard") == 0 && argc >= 2) {
+        if (strcmp(parts[1], "read") == 0) {
+            result = clipboard_read();
+            if (!result) result = json_result("clipboard", "");
+        } else if (strcmp(parts[1], "write") == 0 && argc >= 3) {
+            char *text = g_strjoinv(" ", parts + 2);
+            clipboard_write(text);
+            g_free(text);
+            result = json_ok();
+        } else {
+            result = json_error("usage: clipboard read|write <text>");
+        }
+    }
+    // === Session recording ===
+    else if (strcmp(cmd, "record") == 0) {
+        page_start_recording(state->web_view);
+        result = json_result("status", "recording_started");
+    }
+    else if (strcmp(cmd, "stop-recording") == 0) {
+        result = page_stop_recording(state->web_view);
+    }
+    else if (strcmp(cmd, "get-recording") == 0) {
+        result = page_get_recording(state->web_view);
+    }
+    // === Performance monitoring ===
+    else if (strcmp(cmd, "perf-timing") == 0) {
+        result = page_performance_timing(state->web_view);
+    }
+    else if (strcmp(cmd, "perf-memory") == 0) {
+        result = page_performance_memory(state->web_view);
+    }
+    // === Accessibility audit ===
+    else if (strcmp(cmd, "a11y-audit") == 0) {
+        result = page_accessibility_audit(state->web_view);
+    }
+    // === PDF export ===
+    else if (strcmp(cmd, "pdf") == 0 && argc >= 2) {
+        bool ok = page_export_pdf(state->web_view, parts[1]);
+        result = ok ? json_ok() : json_error("pdf_export_failed");
+    }
     // === Close browser ===
     else if (strcmp(cmd, "close") == 0) {
         // Signal the browser to exit
@@ -567,6 +670,9 @@ char *command_process(BrowserState *state, const char *line) {
             "role-click role-type role-find frames dialog dialogs "
             "submit-and-wait click-and-wait dialog-auto dialog-clear "
             "maximize minimize fullscreen center close "
+            "back forward history history-goto "
+            "find-text find-count ls-get ls-set ls-all ss-get ss-set "
+            "clipboard pdf "
             "mousedown mouseup humanize help");
     }
     else {

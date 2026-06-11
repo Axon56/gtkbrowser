@@ -80,3 +80,42 @@ char *page_clear_dialogs(WebKitWebView *web_view);
 void page_set_dialog_auto(WebKitWebView *web_view, bool auto_accept, const char *prompt_value);
 
 #endif // PAGE_H
+
+// Navigation history
+void page_go_back(WebKitWebView *web_view);
+void page_go_forward(WebKitWebView *web_view);
+int page_get_history_length(WebKitWebView *web_view);
+int page_get_history_index(WebKitWebView *web_view);
+
+// Find in page
+char *page_find_in_page(WebKitWebView *web_view, const char *query, bool highlight);
+int page_count_matches(WebKitWebView *web_view, const char *query);
+
+// Local/Session storage
+char *page_local_storage_get(WebKitWebView *web_view, const char *key);
+void page_local_storage_set(WebKitWebView *web_view, const char *key, const char *value);
+char *page_session_storage_get(WebKitWebView *web_view, const char *key);
+void page_session_storage_set(WebKitWebView *web_view, const char *key, const char *value);
+char *page_local_storage_all(WebKitWebView *web_view);
+
+// Clipboard
+char *clipboard_read(void);
+void clipboard_write(const char *text);
+
+// PDF export
+bool page_export_pdf(WebKitWebView *web_view, const char *filepath);
+
+// Navigation
+void page_goto_history(WebKitWebView *web_view, int index);
+
+// Session recording
+void page_start_recording(WebKitWebView *web_view);
+char *page_stop_recording(WebKitWebView *web_view);
+char *page_get_recording(WebKitWebView *web_view);
+
+// Performance monitoring
+char *page_performance_timing(WebKitWebView *web_view);
+char *page_performance_memory(WebKitWebView *web_view);
+
+// Accessibility audit
+char *page_accessibility_audit(WebKitWebView *web_view);

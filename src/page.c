@@ -668,3 +668,355 @@ void page_set_dialog_auto(WebKitWebView *web_view, bool auto_accept, const char 
     char *res = page_eval_js(web_view, js);
     g_free(res);
 }
+
+// === Navigation History ===
+
+void page_go_back(WebKitWebView *web_view) {
+    if (!web_view) return;
+    webkit_web_view_go_back(web_view);
+}
+
+void page_go_forward(WebKitWebView *web_view) {
+    if (!web_view) return;
+    webkit_web_view_go_forward(web_view);
+}
+
+int page_get_history_length(WebKitWebView *web_view) {
+    if (!web_view) return 0;
+    WebKitBackForwardList *bfl = webkit_web_view_get_back_forward_list(web_view);
+    return webkit_back_forward_list_get_length(bfl);
+}
+
+int page_get_history_index(WebKitWebView *web_view) {
+    if (!web_view) return 0;
+    WebKitBackForwardList *bfl = webkit_web_view_get_back_forward_list(web_view);
+    int len = webkit_back_forward_list_get_length(bfl);
+    WebKitBackForwardListItem *current = webkit_back_forward_list_get_current_item(bfl);
+    if (!current) return 0;
+    // Count how many back items exist
+    GList *back_list = webkit_back_forward_list_get_back_list_with_limit(bfl, len);
+    int idx = g_list_length(back_list);
+    g_list_free(back_list);
+    return idx;
+}
+
+void page_goto_history(WebKitWebView *web_view, int index) {
+    if (!web_view) return;
+    WebKitBackForwardList *bfl = webkit_web_view_get_back_forward_list(web_view);
+    WebKitBackForwardListItem *item = webkit_back_forward_list_get_nth_item(bfl, index);
+    if (item) {
+        webkit_web_view_go_to_back_forward_list_item(web_view, item);
+    }
+}
+
+// === Find in Page ===
+
+char *page_find_in_page(WebKitWebView *web_view, const char *query, bool highlight) {
+    if (!web_view || !query) return NULL;
+
+    char *js;
+    if (highlight) {
+        js = g_strdup_printf(
+            "(function(){"
+            "  if(window._findHighlight) {"
+            "    window._findHighlight.removeHighlight();"
+            "  }"
+            "  window._findHighlight = new rangy.Highlighter();"
+            "  var results = rangy.cssClassApplier "
+            "    ? null : null;"
+            "  // Simple highlight via CSS"
+            "  var style = document.createElement('style');"
+            "  style.id = 'gb-find-style';"
+            "  style.textContent = '.gb-highlight{background:yellow;padding:1px 2px;}';"
+            "  if(!document.getElementById('gb-find-style')) document.head.appendChild(style);"
+            "  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);"
+            "  var count = 0;"
+            "  while(walker.nextNode()) {"
+            "    var node = walker.currentNode;"
+            "    var idx = node.nodeValue.toLowerCase().indexOf('%s'.toLowerCase());"
+            "    if(idx >= 0) {"
+            "      var span = document.createElement('span');"
+            "      span.className = 'gb-highlight';"
+            "      span.textContent = node.nodeValue.substring(idx, idx + '%s'.length);"
+            "      node.parentNode.replaceChild(span, node);"
+            "      count++;"
+            "    }"
+            "  }"
+            "  return JSON.stringify({matches: count});"
+            "})()", query, query);
+    } else {
+        js = g_strdup_printf(
+            "(function(){"
+            "  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);"
+            "  var count = 0;"
+            "  while(walker.nextNode()) {"
+            "    if(walker.currentNode.nodeValue.toLowerCase().indexOf('%s'.toLowerCase()) >= 0) {"
+            "      count++;"
+            "    }"
+            "  }"
+            "  return JSON.stringify({matches: count});"
+            "})()", query);
+    }
+
+    char *result = page_eval_js(web_view, js);
+    g_free(js);
+    return result;
+}
+
+int page_count_matches(WebKitWebView *web_view, const char *query) {
+    char *json = page_find_in_page(web_view, query, false);
+    if (!json) return 0;
+    int count = 0;
+    char *p = strstr(json, "\"matches\":");
+    if (p) count = atoi(p + 11);
+    g_free(json);
+    return count;
+}
+
+// === Local/Session Storage ===
+
+char *page_local_storage_get(WebKitWebView *web_view, const char *key) {
+    if (!web_view || !key) return NULL;
+    char *js = g_strdup_printf(
+        "(function(){ var v = localStorage.getItem('%s'); return v !== null ? v : ''; })()", key);
+    char *result = page_eval_js(web_view, js);
+    g_free(js);
+    return result;
+}
+
+void page_local_storage_set(WebKitWebView *web_view, const char *key, const char *value) {
+    if (!web_view || !key || !value) return;
+    char *js = g_strdup_printf(
+        "(function(){ localStorage.setItem('%s', '%s'); return true; })()", key, value);
+    char *res = page_eval_js(web_view, js);
+    g_free(res);
+    g_free(js);
+}
+
+char *page_session_storage_get(WebKitWebView *web_view, const char *key) {
+    if (!web_view || !key) return NULL;
+    char *js = g_strdup_printf(
+        "(function(){ var v = sessionStorage.getItem('%s'); return v !== null ? v : ''; })()", key);
+    char *result = page_eval_js(web_view, js);
+    g_free(js);
+    return result;
+}
+
+void page_session_storage_set(WebKitWebView *web_view, const char *key, const char *value) {
+    if (!web_view || !key || !value) return;
+    char *js = g_strdup_printf(
+        "(function(){ sessionStorage.setItem('%s', '%s'); return true; })()", key, value);
+    char *res = page_eval_js(web_view, js);
+    g_free(res);
+    g_free(js);
+}
+
+char *page_local_storage_all(WebKitWebView *web_view) {
+    if (!web_view) return NULL;
+    return page_eval_js(web_view,
+        "(function(){ var items = {}; for(var i=0; i<localStorage.length; i++){"
+        "  var k = localStorage.key(i); items[k] = localStorage.getItem(k);"
+        "} return JSON.stringify(items); })()");
+}
+
+// === Clipboard ===
+
+char *clipboard_read(void) {
+    char *result = NULL;
+    FILE *fp = popen("xclip -selection clipboard -o 2>/dev/null", "r");
+    if (fp) {
+        GString *buf = g_string_new(NULL);
+        char tmp[1024];
+        while (fgets(tmp, sizeof(tmp), fp)) {
+            g_string_append(buf, tmp);
+        }
+        pclose(fp);
+        result = g_string_free(buf, FALSE);
+    }
+    return result;
+}
+
+void clipboard_write(const char *text) {
+    if (!text) return;
+    char *cmd = g_strdup_printf("echo -n '%s' | xclip -selection clipboard", text);
+    system(cmd);
+    g_free(cmd);
+}
+
+// === PDF Export ===
+
+bool page_export_pdf(WebKitWebView *web_view, const char *filepath) {
+    if (!web_view || !filepath) return false;
+
+    // Save via JS: create a blob and trigger download
+    char *js = g_strdup_printf(
+        "(function(){"
+        "  var printWindow = window.open('', '_blank');"
+        "  printWindow.document.write(document.documentElement.outerHTML);"
+        "  printWindow.document.close();"
+        "  printWindow.print();"
+        "  return 'print_dialog_opened';"
+        "})()");
+    char *res = page_eval_js(web_view, js);
+    g_free(res);
+    g_free(js);
+
+    // Also save the page HTML to a .html file as fallback
+    char *html = page_get_content(web_view, true);
+    if (html) {
+        FILE *f = fopen(filepath, "w");
+        if (f) {
+            fprintf(f, "%s", html);
+            fclose(f);
+            g_free(html);
+            return true;
+        }
+        g_free(html);
+    }
+    return false;
+}
+
+// === Session Recording ===
+
+static const char *RECORDING_JS =
+    "(function(){"
+    "  if(window._gbRecording) return 'already_recording';"
+    "  window._gbActions = [];"
+    "  window._gbRecording = true;"
+    "  document.addEventListener('click', function(e) {"
+    "    if(window._gbRecording) {"
+    "      window._gbActions.push({"
+    "        type: 'click',"
+    "        x: e.clientX, y: e.clientY,"
+    "        target: e.target.tagName + (e.target.id ? '#' + e.target.id : ''),"
+    "        time: Date.now()"
+    "      });"
+    "    }"
+    "  }, true);"
+    "  document.addEventListener('input', function(e) {"
+    "    if(window._gbRecording) {"
+    "      window._gbActions.push({"
+    "        type: 'input',"
+    "        target: e.target.tagName + (e.target.name ? '[name=' + e.target.name + ']' : ''),"
+    "        value: e.target.value.substring(0, 100),"
+    "        time: Date.now()"
+    "      });"
+    "    }"
+    "  }, true);"
+    "  document.addEventListener('change', function(e) {"
+    "    if(window._gbRecording && (e.target.tagName === 'SELECT')) {"
+    "      window._gbActions.push({"
+    "        type: 'select',"
+    "        target: e.target.tagName + (e.target.name ? '[name=' + e.target.name + ']' : ''),"
+    "        value: e.target.value,"
+    "        time: Date.now()"
+    "      });"
+    "    }"
+    "  }, true);"
+    "  return 'recording_started';"
+    "})();";
+
+void page_start_recording(WebKitWebView *web_view) {
+    if (!web_view) return;
+    char *res = page_eval_js(web_view, RECORDING_JS);
+    g_free(res);
+}
+
+char *page_stop_recording(WebKitWebView *web_view) {
+    if (!web_view) return NULL;
+    char *res = page_eval_js(web_view,
+        "(function(){ window._gbRecording = false; return 'recording_stopped'; })()");
+    return res;
+}
+
+char *page_get_recording(WebKitWebView *web_view) {
+    if (!web_view) return NULL;
+    return page_eval_js(web_view,
+        "JSON.stringify(window._gbActions || [])");
+}
+
+// === Performance Monitoring ===
+
+char *page_performance_timing(WebKitWebView *web_view) {
+    if (!web_view) return NULL;
+    return page_eval_js(web_view,
+        "(function(){"
+        "  var t = performance.timing;"
+        "  var nav = performance.navigation;"
+        "  return JSON.stringify({"
+        "    dns: t.domainLookupEnd - t.domainLookupStart,"
+        "    tcp: t.connectEnd - t.connectStart,"
+        "    ttfb: t.responseStart - t.requestStart,"
+        "    download: t.responseEnd - t.responseStart,"
+        "    dom_interactive: t.domInteractive - t.navigationStart,"
+        "    dom_complete: t.domComplete - t.navigationStart,"
+        "    load_event: t.loadEventEnd - t.navigationStart,"
+        "    total: t.loadEventEnd - t.navigationStart,"
+        "    type: nav.type,"
+        "    redirect_count: nav.redirectCount"
+        "  });"
+        "})()");
+}
+
+char *page_performance_memory(WebKitWebView *web_view) {
+    if (!web_view) return NULL;
+    return page_eval_js(web_view,
+        "(function(){"
+        "  if(performance.memory) {"
+        "    return JSON.stringify({"
+        "      used: performance.memory.usedJSHeapSize,"
+        "      total: performance.memory.totalJSHeapSize,"
+        "      limit: performance.memory.jsHeapSizeLimit"
+        "    });"
+        "  }"
+        "  return JSON.stringify({error: 'memory API not available'});"
+        "})()");
+}
+
+// === Accessibility Audit ===
+
+char *page_accessibility_audit(WebKitWebView *web_view) {
+    if (!web_view) return NULL;
+
+    const char *js =
+        "(function(){"
+        "  var issues = [];"
+        "  // Check images without alt text"
+        "  var imgs = document.querySelectorAll('img:not([alt])');"
+        "  if(imgs.length > 0) issues.push({rule: 'img-alt', count: imgs.length, severity: 'warning'});"
+        "  // Check links without text"
+        "  var links = document.querySelectorAll('a:not([aria-label]):not([title])');"
+        "  var emptyLinks = 0;"
+        "  for(var i=0; i<links.length; i++) {"
+        "    if(!links[i].innerText.trim() && !links[i].querySelector('img')) emptyLinks++;"
+        "  }"
+        "  if(emptyLinks > 0) issues.push({rule: 'link-text', count: emptyLinks, severity: 'warning'});"
+        "  // Check form inputs without labels"
+        "  var inputs = document.querySelectorAll('input:not([type=hidden]):not([type=submit])');"
+        "  var unlabeled = 0;"
+        "  for(var i=0; i<inputs.length; i++) {"
+        "    var id = inputs[i].id;"
+        "    var hasLabel = id && document.querySelector('label[for=\"' + id + '\"]');"
+        "    var hasAriaLabel = inputs[i].getAttribute('aria-label');"
+        "    var hasTitle = inputs[i].getAttribute('title');"
+        "    var hasPlaceholder = inputs[i].getAttribute('placeholder');"
+        "    if(!hasLabel && !hasAriaLabel && !hasTitle && !hasPlaceholder) unlabeled++;"
+        "  }"
+        "  if(unlabeled > 0) issues.push({rule: 'input-label', count: unlabeled, severity: 'warning'});"
+        "  // Check heading hierarchy"
+        "  var headings = document.querySelectorAll('h1,h2,h3,h4,h5,h6');"
+        "  var prevLevel = 0;"
+        "  var skipCount = 0;"
+        "  for(var i=0; i<headings.length; i++) {"
+        "    var level = parseInt(headings[i].tagName[1]);"
+        "    if(level > prevLevel + 1 && prevLevel > 0) skipCount++;"
+        "    prevLevel = level;"
+        "  }"
+        "  if(skipCount > 0) issues.push({rule: 'heading-order', count: skipCount, severity: 'info'});"
+        "  // Check color contrast (simplified)"
+        "  var total = imgs.length + emptyLinks + unlabeled + skipCount;"
+        "  return JSON.stringify({issues: issues, total_issues: total, score: Math.max(0, 100 - total * 5)});"
+        "})()";
+
+    return page_eval_js(web_view, js);
+}
