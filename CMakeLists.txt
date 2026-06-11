@@ -24,6 +24,7 @@ set(SOURCES
     src/humanize.c
     src/profile.c
     src/headless.c
+    src/video.c
 )
 
 # Build

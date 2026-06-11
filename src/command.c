@@ -3,6 +3,7 @@
 #include "page.h"
 #include "screenshot.h"
 #include "humanize.h"
+#include "video.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -679,6 +680,36 @@ char *command_process(BrowserState *state, const char *line) {
     else if (strcmp(cmd, "pdf") == 0 && argc >= 2) {
         bool ok = page_export_pdf(state->web_view, parts[1]);
         result = ok ? json_ok() : json_error("pdf_export_failed");
+    }
+    // === Screen recording ===
+    else if (strcmp(cmd, "record-video") == 0 && argc >= 2) {
+        if (strcmp(parts[1], "start") == 0 && argc >= 3) {
+            int fps = (argc >= 4) ? atoi(parts[3]) : 15;
+            bool ok = video_start_record(parts[2], fps);
+            result = ok ? json_ok() : json_error("recording_failed");
+        } else if (strcmp(parts[1], "stop") == 0) {
+            bool ok = video_stop_record();
+            result = ok ? json_ok() : json_error("no_recording_active");
+        } else if (strcmp(parts[1], "status") == 0) {
+            bool active = video_is_recording();
+            const char *path = video_get_output();
+            JsonBuilder *b = json_builder_new();
+            json_builder_begin_object(b);
+            json_builder_set_member_name(b, "recording");
+            json_builder_add_boolean_value(b, active);
+            if (path) {
+                json_builder_set_member_name(b, "output");
+                json_builder_add_string_value(b, path);
+            }
+            json_builder_end_object(b);
+            JsonGenerator *gen = json_generator_new();
+            json_generator_set_root(gen, json_builder_get_root(b));
+            result = json_generator_to_data(gen, NULL);
+            g_object_unref(gen);
+            g_object_unref(b);
+        } else {
+            result = json_error("usage: record-video start <file> [fps]|stop|status");
+        }
     }
     // === Close browser ===
     else if (strcmp(cmd, "close") == 0) {
