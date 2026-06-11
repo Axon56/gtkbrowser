@@ -650,6 +650,10 @@ char *command_process(BrowserState *state, const char *line) {
         result = page_accessibility_audit(state->web_view);
     }
     // === Network logging ===
+    // Capture a frame if recording is active
+    if (video_is_recording()) video_capture_frame();
+
+    // === Network logging ===
     else if (strcmp(cmd, "net-log") == 0) {
         page_start_network_log(state->web_view);
         result = json_result("status", "network_logging_started");
