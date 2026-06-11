@@ -1020,3 +1020,115 @@ char *page_accessibility_audit(WebKitWebView *web_view) {
 
     return page_eval_js(web_view, js);
 }
+
+// === Network Logging ===
+
+static const char *NET_LOG_JS =
+    "(function(){"
+    "  if(window._gbNetLog) return 'already_logging';"
+    "  window._gbNetRequests = [];"
+    "  window._gbNetLog = true;"
+    "  var origFetch = window.fetch;"
+    "  window.fetch = function() {"
+    "    var url = arguments[0];"
+    "    if(typeof url === 'string') url = url;"
+    "    else if(url && url.url) url = url.url;"
+    "    else url = String(url);"
+    "    window._gbNetRequests.push({"
+    "      type: 'fetch', url: url, time: Date.now()"
+    "    });"
+    "    return origFetch.apply(this, arguments);"
+    "  };"
+    "  var origOpen = XMLHttpRequest.prototype.open;"
+    "  XMLHttpRequest.prototype.open = function(method, url) {"
+    "    window._gbNetRequests.push({"
+    "      type: 'xhr', method: method, url: url, time: Date.now()"
+    "    });"
+    "    return origOpen.apply(this, arguments);"
+    "  };"
+    "  var origSend = XMLHttpRequest.prototype.send;"
+    "  XMLHttpRequest.prototype.send = function(body) {"
+    "    var req = window._gbNetRequests[window._gbNetRequests.length - 1];"
+    "    if(req && req.type === 'xhr') {"
+    "      req.body = typeof body === 'string' ? body.substring(0, 200) : 'binary';"
+    "    }"
+    "    return origSend.apply(this, arguments);"
+    "  };"
+    "  return 'network_logging_started';"
+    "})();";
+
+void page_start_network_log(WebKitWebView *web_view) {
+    if (!web_view) return;
+    char *res = page_eval_js(web_view, NET_LOG_JS);
+    g_free(res);
+}
+
+char *page_get_network_log(WebKitWebView *web_view) {
+    if (!web_view) return NULL;
+    return page_eval_js(web_view,
+        "JSON.stringify(window._gbNetRequests || [])");
+}
+
+void page_stop_network_log(WebKitWebView *web_view) {
+    if (!web_view) return;
+    char *res = page_eval_js(web_view,
+        "(function(){ window._gbNetLog = false; return 'network_logging_stopped'; })()");
+    g_free(res);
+}
+
+// === Download Handler ===
+
+char *page_get_downloads(WebKitWebView *web_view) {
+    if (!web_view) return NULL;
+    return page_eval_js(web_view,
+        "(function(){"
+        "  var downloads = [];"
+        "  var links = document.querySelectorAll('a[download],a[href$=.pdf],a[href$=.zip],a[href$=.tar],a[href$=.gz]');"
+        "  for(var i=0; i<links.length; i++) {"
+        "    downloads.push({"
+        "      url: links[i].href,"
+        "      name: links[i].download || links[i].href.split('/').pop(),"
+        "      text: (links[i].innerText || '').substring(0, 50)"
+        "    });"
+        "  }"
+        "  return JSON.stringify(downloads);"
+        "})()");
+}
+
+// === Drag and Drop Simulation ===
+
+void page_drag(WebKitWebView *web_view, int sx, int sy, int ex, int ey) {
+    if (!web_view) return;
+
+    // Simulate drag via mouse events at source, move, then target
+    input_mouse_down(web_view, sx, sy);
+    g_usleep(100000); // 100ms hold
+
+    // Move in steps
+    int steps = 20;
+    for (int i = 1; i <= steps; i++) {
+        int x = sx + (ex - sx) * i / steps;
+        int y = sy + (ey - sy) * i / steps;
+        input_mouse_move(web_view, x, y);
+        g_usleep(20000); // 20ms per step
+    }
+
+    g_usleep(100000); // 100ms pause at target
+    input_mouse_up(web_view, ex, ey);
+}
+
+// === SSL Certificate Info ===
+
+char *page_ssl_info(WebKitWebView *web_view) {
+    if (!web_view) return NULL;
+
+    return page_eval_js(web_view,
+        "(function(){"
+        "  var info = {"
+        "    protocol: location.protocol,"
+        "    hostname: location.hostname,"
+        "    isSecure: location.protocol === 'https:'"
+        "  };"
+        "  return JSON.stringify(info);"
+        "})()");
+}

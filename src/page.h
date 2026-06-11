@@ -119,3 +119,17 @@ char *page_performance_memory(WebKitWebView *web_view);
 
 // Accessibility audit
 char *page_accessibility_audit(WebKitWebView *web_view);
+
+// Network logging
+void page_start_network_log(WebKitWebView *web_view);
+char *page_get_network_log(WebKitWebView *web_view);
+void page_stop_network_log(WebKitWebView *web_view);
+
+// Download handler
+char *page_get_downloads(WebKitWebView *web_view);
+
+// Drag and drop simulation
+void page_drag(WebKitWebView *web_view, int sx, int sy, int ex, int ey);
+
+// SSL certificate info
+char *page_ssl_info(WebKitWebView *web_view);

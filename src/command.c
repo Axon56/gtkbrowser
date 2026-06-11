@@ -648,6 +648,33 @@ char *command_process(BrowserState *state, const char *line) {
     else if (strcmp(cmd, "a11y-audit") == 0) {
         result = page_accessibility_audit(state->web_view);
     }
+    // === Network logging ===
+    else if (strcmp(cmd, "net-log") == 0) {
+        page_start_network_log(state->web_view);
+        result = json_result("status", "network_logging_started");
+    }
+    else if (strcmp(cmd, "net-stop") == 0) {
+        page_stop_network_log(state->web_view);
+        result = json_result("status", "network_logging_stopped");
+    }
+    else if (strcmp(cmd, "net-requests") == 0) {
+        result = page_get_network_log(state->web_view);
+    }
+    // === Downloads ===
+    else if (strcmp(cmd, "downloads") == 0) {
+        result = page_get_downloads(state->web_view);
+    }
+    // === Drag and drop ===
+    else if (strcmp(cmd, "drag") == 0 && argc >= 5) {
+        int sx = atoi(parts[1]), sy = atoi(parts[2]);
+        int ex = atoi(parts[3]), ey = atoi(parts[4]);
+        page_drag(state->web_view, sx, sy, ex, ey);
+        result = json_ok();
+    }
+    // === SSL info ===
+    else if (strcmp(cmd, "ssl") == 0) {
+        result = page_ssl_info(state->web_view);
+    }
     // === PDF export ===
     else if (strcmp(cmd, "pdf") == 0 && argc >= 2) {
         bool ok = page_export_pdf(state->web_view, parts[1]);
