@@ -1,0 +1,24 @@
+# Build artifacts
+build/
+target/
+*.o
+*.a
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug
+core
+core.*
+*.core
+
+# Artifacts
+artifacts/

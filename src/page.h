@@ -1,0 +1,82 @@
+#ifndef PAGE_H
+#define PAGE_H
+
+#include <webkit2/webkit2.h>
+#include <stdbool.h>
+
+// Get page content (innerHTML or outerHTML)
+char *page_get_content(WebKitWebView *web_view, bool outer);
+
+// Get page text content (innerText equivalent)
+char *page_get_text(WebKitWebView *web_view);
+
+// Execute JavaScript in the page context
+char *page_eval_js(WebKitWebView *web_view, const char *script);
+
+// Find element by selector and return its bounding rect as JSON
+char *page_find_element(WebKitWebView *web_view, const char *selector);
+
+// Get accessibility tree as JSON
+char *page_get_accessibility_tree(WebKitWebView *web_view);
+
+// Wait for element to appear
+int page_wait_for(WebKitWebView *web_view, const char *selector, int timeout_ms);
+
+// Wait for navigation to complete
+int page_wait_for_load(WebKitWebView *web_view, int timeout_ms);
+
+// Get all interactive elements as JSON array
+char *page_get_elements(WebKitWebView *web_view);
+
+// Set viewport size
+void page_set_viewport(WebKitWebView *web_view, int width, int height);
+
+// Read text/value of a specific element
+char *page_read_element(WebKitWebView *web_view, const char *selector, bool read_value);
+
+// Count elements matching selector
+char *page_count_elements(WebKitWebView *web_view, const char *selector);
+
+// Get formatted accessibility tree (human-readable)
+char *page_inspect(WebKitWebView *web_view);
+
+// Wait for text to appear/disappear on page
+int page_wait_for_text(WebKitWebView *web_view, const char *text, bool disappear, int timeout_ms);
+
+// Wait for URL to contain string
+int page_wait_for_url(WebKitWebView *web_view, const char *url_part, int timeout_ms);
+
+// Wait for element to have a specific state
+int page_wait_for_state(WebKitWebView *web_view, const char *selector, const char *state, int timeout_ms);
+
+// Find element by accessibility role selector (e.g. "Button:Submit")
+char *page_find_role_element(WebKitWebView *web_view, const char *role_selector);
+
+// Click element by accessibility role selector
+int page_click_role(WebKitWebView *web_view, const char *role_selector);
+
+// Type into element by accessibility role selector
+int page_type_role(WebKitWebView *web_view, const char *role_selector, const char *text);
+
+// Handle next dialog
+char *page_handle_dialog(WebKitWebView *web_view, const char *action, const char *value);
+
+// Get page title
+char *page_get_title(WebKitWebView *web_view);
+
+// Get iframes list
+char *page_get_frames(WebKitWebView *web_view);
+
+// Find element with nth match (0-based)
+char *page_find_nth(WebKitWebView *web_view, const char *selector, int nth);
+
+// Click nth element
+int page_click_nth(WebKitWebView *web_view, const char *selector, int nth);
+
+// Dialog management (JS-based)
+void page_inject_dialog_handler(WebKitWebView *web_view);
+char *page_get_dialogs(WebKitWebView *web_view);
+char *page_clear_dialogs(WebKitWebView *web_view);
+void page_set_dialog_auto(WebKitWebView *web_view, bool auto_accept, const char *prompt_value);
+
+#endif // PAGE_H
