@@ -7,6 +7,8 @@
 #include <stdio.h>
 
 static char *g_data_dir = NULL;
+static char *g_proxy_user = NULL;
+static char *g_proxy_pass = NULL;
 
 static void ensure_dir(const char *path) {
     struct stat st;
@@ -119,11 +121,92 @@ void profile_set_user_agent(WebKitSettings *settings, const char *ua) {
         settings, "GTKBrowser", "1.0");
 }
 
+// Parse proxy URI and extract host, port, user, pass
+static void parse_proxy_uri(const char *uri, char **host, int *port,
+                             char **user, char **pass) {
+    *host = NULL;
+    *port = 0;
+    *user = NULL;
+    *pass = NULL;
+
+    if (!uri) return;
+
+    const char *scheme_end = strstr(uri, "://");
+    if (!scheme_end) return;
+
+    const char *rest = scheme_end + 3;
+
+    const char *at = strchr(rest, '@');
+    if (at) {
+        const char *user_pass = rest;
+        const char *host_start = at + 1;
+
+        int up_len = at - user_pass;
+        char *user_pass_str = g_strndup(user_pass, up_len);
+        char *colon = strchr(user_pass_str, ':');
+        if (colon) {
+            *user = g_strndup(user_pass_str, colon - user_pass_str);
+            *pass = g_strdup(colon + 1);
+        }
+        g_free(user_pass_str);
+        rest = host_start;
+    }
+
+    const char *port_sep = strchr(rest, ':');
+    if (port_sep) {
+        *host = g_strndup(rest, port_sep - rest);
+        *port = atoi(port_sep + 1);
+    } else {
+        *host = g_strdup(rest);
+        *port = 80;
+    }
+}
+
+// Authentication callback for proxy
+static void on_authenticate(WebKitWebContext *context,
+                             WebKitAuthenticationRequest *request,
+                             gpointer user_data) {
+    (void)context;
+    (void)user_data;
+
+    // Auto-accept with stored proxy credentials
+    if (g_proxy_user && g_proxy_pass) {
+        WebKitCredential *cred = webkit_credential_new(
+            g_proxy_user,
+            g_proxy_pass,
+            WEBKIT_CREDENTIAL_PERSISTENCE_NONE);
+
+        webkit_authentication_request_authenticate(request, cred);
+        webkit_credential_free(cred);
+        fprintf(stderr, "GTKBrowser: Proxy authenticated automatically\n");
+    } else {
+        webkit_authentication_request_cancel(request);
+        fprintf(stderr, "GTKBrowser: Proxy auth required but no credentials set\n");
+    }
+}
+
 void profile_set_proxy(WebKitWebContext *context, const char *proxy_uri) {
     if (!context || !proxy_uri) return;
 
+    // Parse the URI to extract credentials
+    char *host = NULL, *user = NULL, *pass = NULL;
+    int port = 0;
+    parse_proxy_uri(proxy_uri, &host, &port, &user, &pass);
+
+    // Build clean proxy URI (host:port only, no credentials)
+    char clean_proxy[1024];
+    snprintf(clean_proxy, sizeof(clean_proxy), "http://%s:%d",
+             host ? host : "127.0.0.1", port);
+
+    // Store credentials for auth callback
+    g_free(g_proxy_user);
+    g_free(g_proxy_pass);
+    g_proxy_user = user;
+    g_proxy_pass = pass;
+
+    // Set up proxy settings
     WebKitNetworkProxySettings *proxy_settings =
-        webkit_network_proxy_settings_new(proxy_uri, NULL);
+        webkit_network_proxy_settings_new(clean_proxy, NULL);
 
     webkit_web_context_set_network_proxy_settings(
         context,
@@ -131,4 +214,16 @@ void profile_set_proxy(WebKitWebContext *context, const char *proxy_uri) {
         proxy_settings);
 
     webkit_network_proxy_settings_free(proxy_settings);
+
+
+    fprintf(stderr, "GTKBrowser: Proxy set to %s (user: %s)\n",
+            clean_proxy, user ? user : "(none)");
+    g_free(host);
+}
+
+// Connect auth signal to web view (call after web view is created)
+void profile_connect_auth_handler(WebKitWebView *web_view) {
+    if (!web_view) return;
+    g_signal_connect(web_view, "authenticate",
+                     G_CALLBACK(on_authenticate), NULL);
 }

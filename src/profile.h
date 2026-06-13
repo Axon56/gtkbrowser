@@ -4,27 +4,20 @@
 #include <webkit2/webkit2.h>
 #include <stdbool.h>
 
-// Initialize cookie persistence for a web context
-// data_dir: where to store cookies/profile (e.g. ~/.local/share/gtkbrowser/default)
+// Cookie management
 void profile_init(WebKitWebContext *context, const char *data_dir);
-
-// Get the default profile path
 char *profile_get_default_path(void);
-
-// Get a named profile path
 char *profile_get_path(const char *name);
-
-// List all saved profiles
 char **profile_list(int *count);
-
-// Delete a profile
 bool profile_delete(const char *name);
 
-// Set custom user agent
+// User agent
 void profile_set_user_agent(WebKitSettings *settings, const char *ua);
 
-// Set proxy
-void profile_set_proxy(WebKitWebContext *context,
-                        const char *proxy_uri);
+// Proxy
+void profile_set_proxy(WebKitWebContext *context, const char *proxy_uri);
+
+// Connect auth handler to web view (call after web view is created)
+void profile_connect_auth_handler(WebKitWebView *web_view);
 
 #endif // PROFILE_H

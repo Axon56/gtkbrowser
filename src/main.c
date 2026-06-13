@@ -35,6 +35,9 @@ static void on_activate(GtkApplication *app, gpointer user_data) {
     gtk_container_add(GTK_CONTAINER(state->window), state->scrolled_window);
 
     state->web_view = WEBKIT_WEB_VIEW(webkit_web_view_new());
+    
+    // Connect auth handler for proxy authentication
+    profile_connect_auth_handler(state->web_view);
 
     state->settings = webkit_settings_new();
     webkit_settings_set_javascript_can_open_windows_automatically(state->settings, FALSE);
