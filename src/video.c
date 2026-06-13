@@ -1,5 +1,6 @@
 #include "video.h"
 #include <stdio.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -10,8 +11,6 @@
 static pid_t g_ffmpeg_pid = 0;
 static char g_output_path[1024] = {0};
 static bool g_recording = false;
-static char g_frames_dir[256] = {0};
-static int g_frame_count = 0;
 
 bool video_start_record(const char *filepath, int fps) {
     if (g_recording) return false;
@@ -22,79 +21,78 @@ bool video_start_record(const char *filepath, int fps) {
 
     strncpy(g_output_path, filepath, sizeof(g_output_path) - 1);
 
-    // Create temp directory for frames
-    snprintf(g_frames_dir, sizeof(g_frames_dir), "/tmp/gtkbrowser_frames_%d", getpid());
-    char mkdir_cmd[512];
-    snprintf(mkdir_cmd, sizeof(mkdir_cmd), "rm -rf %s && mkdir -p %s", g_frames_dir, g_frames_dir);
-    system(mkdir_cmd);
-
-    g_frame_count = 0;
-    g_recording = true;
-
-    fprintf(stderr, "GTKBrowser: Recording started → %s\n", filepath);
-    return true;
-}
-
-void video_capture_frame(void) {
-    if (!g_recording) return;
-
-    const char *display = getenv("DISPLAY");
-    if (!display) display = ":0";
-
-    char frame_path[512];
-    snprintf(frame_path, sizeof(frame_path), "%s/frame_%05d.png", g_frames_dir, g_frame_count);
-
-    // Capture frame using import
-    char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "DISPLAY=%s import -window root '%s'", display, frame_path);
-    int ret = system(cmd);
-    if (ret != 0) {
-        // Fallback: try xwd
-        char xwd_cmd[1024];
-        snprintf(xwd_cmd, sizeof(xwd_cmd), "DISPLAY=%s xwd -root -out '%s.xwd' 2>/dev/null && convert '%s.xwd' '%s' 2>/dev/null && rm -f '%s.xwd'", display, frame_path, frame_path, frame_path, frame_path);
-        system(xwd_cmd);
+    // Get display size
+    char size_buf[32] = "1280x800";
+    FILE *fp = popen("xdpyinfo 2>/dev/null | grep dimensions | awk '{print $2}'", "r");
+    if (fp) {
+        char tmp[32] = {0};
+        if (fgets(tmp, sizeof(tmp), fp)) {
+            tmp[strcspn(tmp, "\n")] = 0;
+            if (strlen(tmp) > 2) strcpy(size_buf, tmp);
+        }
+        pclose(fp);
     }
 
-    g_frame_count++;
+    // Pad to even dimensions for H.264
+    int w = 0, h = 0;
+    sscanf(size_buf, "%dx%d", &w, &h);
+    if (w % 2 != 0) w++;
+    if (h % 2 != 0) h++;
+    char padded_size[32];
+    snprintf(padded_size, sizeof(padded_size), "%dx%d", w, h);
+
+    char fps_str[16];
+    snprintf(fps_str, sizeof(fps_str), "%d", fps);
+
+    // Start ffmpeg x11grab capture in background
+    g_ffmpeg_pid = fork();
+    if (g_ffmpeg_pid == 0) {
+        int devnull = open("/dev/null", O_WRONLY);
+        if (devnull >= 0) {
+            dup2(devnull, STDOUT_FILENO);
+            dup2(devnull, STDERR_FILENO);
+            close(devnull);
+        }
+
+        char *argv[] = {
+            "ffmpeg", "-y",
+            "-f", "x11grab",
+            "-framerate", fps_str,
+            "-video_size", padded_size,
+            "-i", (char *)display,
+            "-pix_fmt", "yuv420p",
+            "-c:v", "libx264",
+            "-preset", "ultrafast",
+            "-crf", "23",
+            (char *)filepath,
+            NULL
+        };
+        execvp("ffmpeg", argv);
+        _exit(1);
+    } else if (g_ffmpeg_pid > 0) {
+        g_recording = true;
+        fprintf(stderr, "GTKBrowser: Recording started → %s (pid %d, %s, %dfps)\n",
+                filepath, g_ffmpeg_pid, padded_size, fps);
+        return true;
+    }
+
+    return false;
 }
 
 bool video_stop_record(void) {
-    if (!g_recording) return false;
+    if (!g_recording || g_ffmpeg_pid <= 0) return false;
+
+    // Send SIGINT to ffmpeg (triggers clean MP4 finalization)
+    kill(g_ffmpeg_pid, SIGINT);
+
+    int status;
+    waitpid(g_ffmpeg_pid, &status, 0);
+
+    fprintf(stderr, "GTKBrowser: Recording stopped → %s\n", g_output_path);
 
     g_recording = false;
-
-    if (g_frame_count == 0) {
-        fprintf(stderr, "GTKBrowser: No frames captured\n");
-        return false;
-    }
-
-    fprintf(stderr, "GTKBrowser: Encoding %d frames...\n", g_frame_count);
-
-    // Build ffmpeg command to encode frames to MP4
-    // H.264 requires even dimensions — use pad filter
-    char cmd[2048];
-    snprintf(cmd, sizeof(cmd),
-        "ffmpeg -y -framerate 10 -i '%s/frame_%%05d.png' "
-        "-vf 'pad=ceil(iw/2)*2:ceil(ih/2)*2' "
-        "-c:v libx264 -pix_fmt yuv420p -preset fast -crf 23 '%s' 2>/dev/null",
-        g_frames_dir, g_output_path);
-
-    int ret = system(cmd);
-
-    // Clean up frames
-    char rm_cmd[512];
-    snprintf(rm_cmd, sizeof(rm_cmd), "rm -rf %s", g_frames_dir);
-    system(rm_cmd);
-
-    if (ret == 0) {
-        fprintf(stderr, "GTKBrowser: Recording saved → %s\n", g_output_path);
-        g_frame_count = 0;
-        return true;
-    } else {
-        fprintf(stderr, "GTKBrowser: Encoding failed\n");
-        g_frame_count = 0;
-        return false;
-    }
+    g_ffmpeg_pid = 0;
+    return true;
 }
 
 bool video_is_recording(void) {

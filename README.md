@@ -1,13 +1,13 @@
 # GTKBrowser 🌐
 
-A lightweight, undetectable browser automation toolkit in 3,700 lines of C.
+A lightweight, undetectable browser automation toolkit in 3,000 lines of C.
 
-GTKBrowser drives Chrome-like browsers via **native GTK input events** — not WebDriver, not CDP, not AT-SPI. Clicks, typing, and input go through the exact same code path as a real human user. Anti-bot systems can't tell the difference.
+GTKBrowser drives browsers via **native GTK input events** — not WebDriver, not CDP, not AT-SPI. Clicks, typing, and input go through the exact same code path as a real human user. Anti-bot systems can't tell the difference.
 
 ## Quick Start
 
 ```bash
-# Install dependencies (auto-detected)
+# Install dependencies
 ./scripts/install-deps.sh
 
 # Build
@@ -31,32 +31,13 @@ cmake .. && make -j$(nproc)
 - **Profile/cookie persistence** — sessions survive restarts
 - **Proxy support** — `--proxy socks5://...`
 - **User agent switching** — `--ua "..."`
-- **Mobile viewport emulation** — `viewport 375 812`
-- **Session recording** — record actions as reusable scripts
+- **Mobile viewport emulation** — `viewport 375 812` (sets iPhone UA + responsive CSS)
+- **Screen recording** — record sessions as MP4 via ffmpeg
+- **Session recording** — record actions as reusable JSON scripts
 - **Network logging** — intercept fetch/XHR requests
 - **Accessibility audit** — WCAG compliance checking
 - **Performance monitoring** — timing and memory stats
 - **No WebDriver/CDP traces** — undetectable by anti-bot systems
-
-## Installation
-
-```bash
-# Debian/Ubuntu
-sudo apt install libgtk-3-0 libwebkit2gtk-4.0-37
-
-# Fedora
-sudo dnf install gtk3 webkit2gtk4.0
-
-# Arch
-sudo pacman -S gtk3 webkit2gtk
-```
-
-Then build:
-```bash
-./scripts/install-deps.sh
-mkdir build && cd build
-cmake .. && make -j$(nproc)
-```
 
 ## CLI Usage
 
@@ -125,13 +106,13 @@ echo "goto https://example.com" | socat - UNIX-CONNECT:/tmp/browser.sock
 | `click <selector>` | Click element by CSS selector |
 | `doubleclick <x> <y>` | Double-click |
 | `rightclick <x> <y>` | Right-click |
-| `mousedown <x> <y>` | Mouse down (hold) |
-| `mouseup <x> <y>` | Mouse up (release) |
 | `hover <selector>` | Hover over element |
 | `type <text>` | Type text |
 | `key <keyname>` | Press key (Return, Tab, Escape, etc.) |
 | `typeinto <selector> <text>` | Click element and type into it |
-| `drag <sx> <sy> <ex> <ey>` | Drag from point to point |
+| `mousedown <x> <y>` | Mouse down (hold) |
+| `mouseup <x> <y>` | Mouse up (release) |
+| `drag <sx> <sy> <ex> <ey>` | Drag and drop |
 
 ### Elements
 
@@ -155,8 +136,8 @@ echo "goto https://example.com" | socat - UNIX-CONNECT:/tmp/browser.sock
 |---------|-------------|
 | `screenshot <file>` | Full page screenshot |
 | `screenshot viewport <file>` | Viewport only |
+| `screenshot fullpage <file>` | Full scrollable page |
 | `screenshot element <sel> <file>` | Specific element |
-| `pdf <file>` | Export page as HTML |
 
 ### Wait
 
@@ -178,18 +159,6 @@ echo "goto https://example.com" | socat - UNIX-CONNECT:/tmp/browser.sock
 | `tab <index>` | Switch to tab |
 | `closetab <index>` | Close tab |
 | Any command `--tab <n>` | Run command in specific tab |
-
-### JavaScript & Page
-
-| Command | Description |
-|---------|-------------|
-| `eval <js>` | Execute JavaScript |
-| `text` | Get page text content |
-| `content` / `content outer` | Get page HTML |
-| `frames` | List all iframes |
-| `scroll <dx> <dy>` | Scroll by delta |
-| `scrollto <selector>` | Scroll element into view |
-| `focus <selector>` | Focus element |
 
 ### Storage
 
@@ -222,6 +191,9 @@ echo "goto https://example.com" | socat - UNIX-CONNECT:/tmp/browser.sock
 | `record` | Start recording user actions |
 | `stop-recording` | Stop recording |
 | `get-recording` | Get recorded actions as JSON |
+| `record-video start <file> [fps]` | Start screen recording (MP4) |
+| `record-video stop` | Stop and save recording |
+| `record-video status` | Check recording status |
 
 ### Dialogs
 
@@ -230,7 +202,6 @@ echo "goto https://example.com" | socat - UNIX-CONNECT:/tmp/browser.sock
 | `dialog accept` | Accept alert/confirm |
 | `dialog dismiss` | Dismiss alert/confirm |
 | `dialog-auto accept` | Auto-accept all dialogs |
-| `dialog-auto accept <text>` | Auto-respond to prompts |
 | `dialogs` | List pending dialogs |
 | `dialog-clear` | Clear dialog queue |
 
@@ -246,7 +217,7 @@ echo "goto https://example.com" | socat - UNIX-CONNECT:/tmp/browser.sock
 | Command | Description |
 |---------|-------------|
 | `resize <w> <h>` | Resize window |
-| `viewport <w> <h>` | Set viewport (resizes + viewport meta) |
+| `viewport <w> <h>` | Set viewport (resizes + sets mobile UA + reloads) |
 | `maximize` | Maximize window |
 | `minimize` | Minimize window |
 | `fullscreen` | Enter fullscreen |
@@ -266,12 +237,20 @@ Levels:
 - **75** — Slow: longer delays, smooth mouse curves
 - **100** — Human: full mimicry with pauses and jitter
 
-### Misc
+### Other
 
 | Command | Description |
 |---------|-------------|
-| `drag <sx> <sy> <ex> <ey>` | Drag and drop simulation |
-| `pdf <file>` | Export page content |
+| `eval <js>` | Execute JavaScript |
+| `text` | Get page text content |
+| `content` / `content outer` | Get page HTML |
+| `frames` | List all iframes |
+| `scroll <dx> <dy>` | Scroll by delta |
+| `scrollto <selector>` | Scroll element into view |
+| `focus <selector>` | Focus element |
+| `pdf <file>` | Export page as HTML |
+| `submit-and-wait` | Click + wait combined |
+| `click-and-wait` | Click + wait combined |
 | `help` | List all commands |
 
 ## Architecture
@@ -287,7 +266,8 @@ gtkbrowser/
 │   ├── screenshot.c/.h — screenshots (X11 import)
 │   ├── humanize.c/.h   — realistic mouse/typing simulation
 │   ├── headless.c/.h   — auto-Xvfb management
-│   └── profile.c/.h    — cookie persistence, proxy, user agent
+│   ├── profile.c/.h    — cookie persistence, proxy, user agent
+│   └── video.c/.h      — screen recording (ffmpeg x11grab)
 ├── scripts/
 │   ├── install-deps.sh — auto-install dependencies
 │   └── run-headless.sh — launch headless session
@@ -318,7 +298,7 @@ GTKBrowser events go through the same code path as a real mouse click from the O
 
 | Feature | GTKBrowser | Playwright | CDP |
 |---------|-----------|------------|-----|
-| Binary size | 104KB | ~350MB | ~200MB |
+| Binary size | 90KB | ~350MB | ~200MB |
 | navigator.webdriver | false ✅ | true ❌ | true ❌ |
 | event.isTrusted | true ✅ | true ✅ | true ✅ |
 | CDP traces | none ✅ | none ✅ | present ❌ |
@@ -326,7 +306,10 @@ GTKBrowser events go through the same code path as a real mouse click from the O
 | Humanize gauge | ✅ 0-100 | ❌ | ❌ |
 | Shadow DOM | ✅ | ✅ | ✅ |
 | Session recording | ✅ | ❌ | ❌ |
+| Screen recording | ✅ MP4 | ❌ | ❌ |
+| Mobile viewport | ✅ auto UA | ✅ | ✅ |
 | Network logging | ✅ | ✅ | ✅ |
+| Auto-headless | ✅ auto-install | ❌ needs setup | ❌ needs Chrome |
 
 ## License
 

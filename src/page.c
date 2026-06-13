@@ -235,7 +235,7 @@ char *page_get_elements(WebKitWebView *web_view) {
 void page_set_viewport(WebKitWebView *web_view, int width, int height) {
     if (!web_view) return;
 
-    // Set the viewport meta tag via JavaScript
+    // Set viewport meta tag for responsive design
     char *js = g_strdup_printf(
         "(function(){"
         "  var meta = document.querySelector('meta[name=viewport]');"
@@ -244,13 +244,21 @@ void page_set_viewport(WebKitWebView *web_view, int width, int height) {
         "    meta.name = 'viewport';"
         "    document.head.appendChild(meta);"
         "  }"
-        "  meta.content = 'width=%d, initial-scale=0.5';"
-        "  return true;"
+        "  meta.content = 'width=%d, initial-scale=1.0, minimum-scale=0.1';"
+        "  return 'viewport_set';"
         "})()", width);
 
     char *res = page_eval_js(web_view, js);
     g_free(res);
     g_free(js);
+
+    // Set mobile user agent to trigger responsive design
+    WebKitSettings *settings = webkit_web_view_get_settings(web_view);
+    webkit_settings_set_user_agent_with_application_details(
+        settings, "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1", "GTKBrowser");
+
+    // Reload the page so responsive CSS kicks in
+    webkit_web_view_reload(web_view);
 }
 
 char *page_read_element(WebKitWebView *web_view, const char *selector, bool read_value) {
