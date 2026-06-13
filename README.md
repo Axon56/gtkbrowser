@@ -237,6 +237,15 @@ Levels:
 - **75** — Slow: longer delays, smooth mouse curves
 - **100** — Human: full mimicry with pauses and jitter
 
+### Forms
+
+| Command | Description |
+|---------|-------------|
+| `check <selector>` | Check a checkbox/radio button |
+| `uncheck <selector>` | Uncheck a checkbox |
+| `is-checked <selector>` | Check if element is checked |
+| `upload <selector> <file>` | Upload a file to file input |
+
 ### Other
 
 | Command | Description |
