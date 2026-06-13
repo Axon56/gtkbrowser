@@ -5,6 +5,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Pass version to C code
+add_definitions(-DGTKBROWSER_VERSION="${PROJECT_VERSION}")
+
 # Find required packages
 find_package(PkgConfig REQUIRED)
 

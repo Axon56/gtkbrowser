@@ -57,6 +57,16 @@ static void on_activate(GtkApplication *app, gpointer user_data) {
     // Set user agent if specified
     if (state->_user_agent) {
         webkit_settings_set_user_agent(state->settings, state->_user_agent);
+    } else {
+        // Add our name to the default UA
+        webkit_settings_set_user_agent_with_application_details(
+            state->settings, "GTKBrowser",
+#ifdef GTKBROWSER_VERSION
+            GTKBROWSER_VERSION
+#else
+            "1.0"
+#endif
+        );
     }
 
     gtk_container_add(GTK_CONTAINER(state->scrolled_window),
