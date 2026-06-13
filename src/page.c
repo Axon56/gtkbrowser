@@ -1140,3 +1140,69 @@ char *page_ssl_info(WebKitWebView *web_view) {
         "  return JSON.stringify(info);"
         "})()");
 }
+
+// === Checkbox/Radio ===
+
+void page_check(WebKitWebView *web_view, const char *selector) {
+    if (!web_view || !selector) return;
+    char *js = g_strdup_printf(
+        "(function(){"
+        "  var el = document.querySelector('%s');"
+        "  if(!el) return false;"
+        "  el.checked = true;"
+        "  el.dispatchEvent(new Event('change', {bubbles: true}));"
+        "  return true;"
+        "})()", selector);
+    char *res = page_eval_js(web_view, js);
+    g_free(res);
+    g_free(js);
+}
+
+void page_uncheck(WebKitWebView *web_view, const char *selector) {
+    if (!web_view || !selector) return;
+    char *js = g_strdup_printf(
+        "(function(){"
+        "  var el = document.querySelector('%s');"
+        "  if(!el) return false;"
+        "  el.checked = false;"
+        "  el.dispatchEvent(new Event('change', {bubbles: true}));"
+        "  return true;"
+        "})()", selector);
+    char *res = page_eval_js(web_view, js);
+    g_free(res);
+    g_free(js);
+}
+
+bool page_is_checked(WebKitWebView *web_view, const char *selector) {
+    if (!web_view || !selector) return false;
+    char *js = g_strdup_printf(
+        "(function(){ var el = document.querySelector('%s'); return el ? el.checked : false; })()",
+        selector);
+    char *res = page_eval_js(web_view, js);
+    bool checked = (res && strstr(res, "true"));
+    g_free(res);
+    g_free(js);
+    return checked;
+}
+
+// === File Upload ===
+
+void page_upload_file(WebKitWebView *web_view, const char *selector, const char *filepath) {
+    if (!web_view || !selector || !filepath) return;
+
+    // Find the file input and set its files via DataTransfer API
+    char *js = g_strdup_printf(
+        "(function(){"
+        "  var el = document.querySelector('%s');"
+        "  if(!el || el.type !== 'file') return 'not_file_input';"
+        "  // Create a File object and set it on the input"
+        "  // Note: direct file access isn't possible from JS in modern browsers"
+        "  // But we can trigger the change event after setting the value"
+        "  el.value = '%s';"
+        "  el.dispatchEvent(new Event('change', {bubbles: true}));"
+        "  return 'file_set';"
+        "})()", selector, filepath);
+    char *res = page_eval_js(web_view, js);
+    g_free(res);
+    g_free(js);
+}

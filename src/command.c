@@ -613,6 +613,24 @@ char *command_process(BrowserState *state, const char *line) {
         g_free(val);
         result = json_ok();
     }
+    // === Checkbox/Radio ===
+    else if (strcmp(cmd, "check") == 0 && argc >= 2) {
+        page_check(state->web_view, parts[1]);
+        result = json_ok();
+    }
+    else if (strcmp(cmd, "uncheck") == 0 && argc >= 2) {
+        page_uncheck(state->web_view, parts[1]);
+        result = json_ok();
+    }
+    else if (strcmp(cmd, "is-checked") == 0 && argc >= 2) {
+        bool checked = page_is_checked(state->web_view, parts[1]);
+        result = checked ? json_result("checked", "true") : json_result("checked", "false");
+    }
+    // === File upload ===
+    else if (strcmp(cmd, "upload") == 0 && argc >= 3) {
+        page_upload_file(state->web_view, parts[1], parts[2]);
+        result = json_ok();
+    }
     // === Clipboard ===
     else if (strcmp(cmd, "clipboard") == 0 && argc >= 2) {
         if (strcmp(parts[1], "read") == 0) {

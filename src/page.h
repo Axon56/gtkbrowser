@@ -133,3 +133,11 @@ void page_drag(WebKitWebView *web_view, int sx, int sy, int ex, int ey);
 
 // SSL certificate info
 char *page_ssl_info(WebKitWebView *web_view);
+
+// Checkbox/Radio
+void page_check(WebKitWebView *web_view, const char *selector);
+void page_uncheck(WebKitWebView *web_view, const char *selector);
+bool page_is_checked(WebKitWebView *web_view, const char *selector);
+
+// File upload
+void page_upload_file(WebKitWebView *web_view, const char *selector, const char *filepath);
