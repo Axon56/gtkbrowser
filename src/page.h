@@ -141,3 +141,9 @@ bool page_is_checked(WebKitWebView *web_view, const char *selector);
 
 // File upload
 void page_upload_file(WebKitWebView *web_view, const char *selector, const char *filepath);
+
+// Dismiss overlays (cookie banners, chat widgets, popups)
+char *page_dismiss_overlays(WebKitWebView *web_view);
+
+// Force elements scan (with delay for SPA render)
+char *page_force_elements(WebKitWebView *web_view);

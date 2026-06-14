@@ -631,6 +631,14 @@ char *command_process(BrowserState *state, const char *line) {
         page_upload_file(state->web_view, parts[1], parts[2]);
         result = json_ok();
     }
+    // === Bug 7: Dismiss overlays ===
+    else if (strcmp(cmd, "dismiss") == 0) {
+        result = page_dismiss_overlays(state->web_view);
+    }
+    // === Bug 3: Force elements ===
+    else if (strcmp(cmd, "force-elements") == 0) {
+        result = page_get_elements(state->web_view);
+    }
     // === Clipboard ===
     else if (strcmp(cmd, "clipboard") == 0 && argc >= 2) {
         if (strcmp(parts[1], "read") == 0) {

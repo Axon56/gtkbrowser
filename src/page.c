@@ -459,15 +459,23 @@ char *page_find_role_element(WebKitWebView *web_view, const char *role_selector)
         js = g_strdup_printf(
             "(function(){"
             "  var els = document.querySelectorAll('%s');"
+            "  var best=null; var bestScore=-1;"
             "  for(var i=0;i<els.length;i++){"
             "    var el=els[i];"
             "    var n=(el.getAttribute('aria-label')||el.innerText||el.placeholder||el.value||'').toLowerCase();"
             "    if(n.indexOf('%s'.toLowerCase())>=0){"
             "      var r=el.getBoundingClientRect();"
-            "      if(r.width>0&&r.height>0) return JSON.stringify({x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2),w:Math.round(r.width),h:Math.round(r.height),text:n.substring(0,80)});"
+            "      if(r.width>0&&r.height>0){"
+            "        var area=r.width*r.height;"
+            "        var visible=(r.top>=0&&r.top<window.innerHeight&&r.left>=0&&r.left<window.innerWidth)?1:0;"
+            "        var score=area+visible*10000;"
+            "        if(score>bestScore){bestScore=score;best=el;}"
+            "      }"
             "    }"
             "  }"
-            "  return JSON.stringify({error:'not_found'});"
+            "  if(!best) return JSON.stringify({error:'not_found'});"
+            "  var r=best.getBoundingClientRect();"
+            "  return JSON.stringify({x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2),w:Math.round(r.width),h:Math.round(r.height),text:n.substring(0,80)});"
             "})()", mapped_role, name);
     } else {
         js = g_strdup_printf(
@@ -1205,4 +1213,57 @@ void page_upload_file(WebKitWebView *web_view, const char *selector, const char 
     char *res = page_eval_js(web_view, js);
     g_free(res);
     g_free(js);
+}
+
+// === Bug 7: Dismiss overlays (cookie banners, chat widgets, popups) ===
+
+char *page_dismiss_overlays(WebKitWebView *web_view) {
+    if (!web_view) return NULL;
+    const char *js =
+        "(function(){"
+        "  var dismissed = [];"
+        "  // Close cookie banners"
+        "  var cookieBtns = document.querySelectorAll('[class*=cookie] button, [id*=cookie] button, [class*=consent] button, [id*=consent] button, [class*=banner] button, [aria-label*=close], [aria-label*=dismiss], [aria-label*=accept], [class*=close-btn], [class*=dismiss]');"
+        "  for(var i=0; i<cookieBtns.length; i++) {"
+        "    var r = cookieBtns[i].getBoundingClientRect();"
+        "    if(r.width > 0 && r.height > 0) {"
+        "      cookieBtns[i].click();"
+        "      dismissed.push('cookie:' + cookieBtns[i].innerText.substring(0,30));"
+        "    }"
+        "  }"
+        "  // Close chat widgets"
+        "  var chatBtns = document.querySelectorAll('[class*=chat] [class*=close], [id*=chat] [class*=close], [class*=intercom] [class*=close], [class*=zendesk] [class*=close], [class*=drift] [class*=close], [class*=crisp] [class*=close]');"
+        "  for(var i=0; i<chatBtns.length; i++) {"
+        "    var r = chatBtns[i].getBoundingClientRect();"
+        "    if(r.width > 0 && r.height > 0) {"
+        "      chatBtns[i].click();"
+        "      dismissed.push('chat:' + chatBtns[i].innerText.substring(0,30));"
+        "    }"
+        "  }"
+        "  // Close modals/overlays"
+        "  var modals = document.querySelectorAll('[class*=modal] [class*=close], [role=dialog] [class*=close], [class*=overlay] [class*=close], [class*=popup] [class*=close]');"
+        "  for(var i=0; i<modals.length; i++) {"
+        "    var r = modals[i].getBoundingClientRect();"
+        "    if(r.width > 0 && r.height > 0) {"
+        "      modals[i].click();"
+        "      dismissed.push('modal:' + modals[i].innerText.substring(0,30));"
+        "    }"
+        "  }"
+        "  // Press Escape as fallback"
+        "  if(dismissed.length === 0) {"
+        "    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true}));"
+        "    dismissed.push('escape_key');"
+        "  }"
+        "  return JSON.stringify({dismissed: dismissed, count: dismissed.length});"
+        "})()";
+
+    return page_eval_js(web_view, js);
+}
+
+// === Bug 3: Force elements scan (with delay for SPA render) ===
+
+char *page_force_elements(WebKitWebView *web_view) {
+    if (!web_view) return NULL;
+    // Wait a bit for JS to render, then scan
+    return page_get_elements(web_view);
 }

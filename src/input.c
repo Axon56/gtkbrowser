@@ -275,6 +275,7 @@ void input_key_press(WebKitWebView *web_view, const char *key_name) {
 
 void input_type_into(WebKitWebView *web_view, const char *selector,
                       const char *text) {
+    // Focus the element
     char *js_focus = g_strdup_printf(
         "(function(){ "
         "  var el = document.querySelector('%s'); "
@@ -286,7 +287,28 @@ void input_type_into(WebKitWebView *web_view, const char *selector,
     g_free(res);
     g_free(js_focus);
 
+    // Type via native events (works for React, Vue, Angular)
     input_type_text(web_view, text);
+
+    // Then fire React-compatible events via JS
+    char *js_events = g_strdup_printf(
+        "(function(){ "
+        "  var el = document.querySelector('%s'); "
+        "  if(!el) return false; "
+        "  var val = '%s';"
+        "  // Use native setter to bypass React's synthetic event system"
+        "  var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');"
+        "  if(nativeSetter && nativeSetter.set) { nativeSetter.set.call(el, val); }"
+        "  else { el.value = val; }"
+        "  el.dispatchEvent(new Event('input', {bubbles: true}));"
+        "  el.dispatchEvent(new Event('change', {bubbles: true}));"
+        "  el.dispatchEvent(new KeyboardEvent('keyup', {bubbles: true, key: 'Process'}));"
+        "  return true;"
+        "})()", selector, text);
+
+    char *res2 = page_eval_js(web_view, js_events);
+    g_free(res2);
+    g_free(js_events);
 }
 
 void input_scroll(WebKitWebView *web_view, int delta_x, int delta_y) {
