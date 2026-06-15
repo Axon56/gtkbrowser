@@ -28,6 +28,7 @@ set(SOURCES
     src/profile.c
     src/headless.c
     src/video.c
+    src/extensions.c
 )
 
 # Build

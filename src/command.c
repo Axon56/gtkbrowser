@@ -1,3 +1,4 @@
+#include "extensions.h"
 #include "command.h"
 #include "input.h"
 #include "page.h"
@@ -744,6 +745,29 @@ char *command_process(BrowserState *state, const char *line) {
         result = json_ok();
         // Queue exit after response is sent
         g_timeout_add(100, (GSourceFunc)gtk_main_quit, NULL);
+    }
+    // === Extensions ===
+    else if (strcmp(cmd, "extension-load") == 0 && argc >= 2) {
+        int count = extensions_load_dir(parts[1]);
+        char count_str[16];
+        snprintf(count_str, sizeof(count_str), "%d", count);
+        result = json_result("loaded", count_str);
+    }
+    else if (strcmp(cmd, "extension-file") == 0 && argc >= 2) {
+        int count = extensions_load_file(parts[1]);
+        result = count > 0 ? json_ok() : json_error("failed_to_load");
+    }
+    else if (strcmp(cmd, "extension-list") == 0) {
+        result = extensions_list_json();
+    }
+    else if (strcmp(cmd, "extension-unload") == 0) {
+        extensions_unload_all();
+        result = json_ok();
+    }
+    else if (strcmp(cmd, "extension-count") == 0) {
+        char count_str[16];
+        snprintf(count_str, sizeof(count_str), "%d", extensions_count());
+        result = json_result("count", count_str);
     }
     // === Help ===
     else if (strcmp(cmd, "help") == 0) {

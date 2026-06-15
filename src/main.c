@@ -1,3 +1,7 @@
+#include "extensions.h"
+
+// Forward declaration
+static void on_load_changed(WebKitWebView *web_view, WebKitLoadEvent event, gpointer user_data);
 #include "browser.h"
 #include "command.h"
 #include "profile.h"
@@ -48,6 +52,13 @@ static void on_activate(GtkApplication *app, gpointer user_data) {
     // Set up cookie persistence
     WebKitWebContext *web_context = webkit_web_view_get_context(state->web_view);
     profile_init(web_context, state->_profile_path);
+
+    // Initialize extensions system
+    extensions_init(web_context);
+
+    // Connect load-changed signal for auto-injection
+    g_signal_connect(state->web_view, "load-changed",
+                     G_CALLBACK(on_load_changed), state);
 
     // Set proxy if specified
     if (state->_proxy_uri) {
@@ -113,6 +124,19 @@ static void print_usage(const char *prog) {
     printf("  %s --humanize 75 https://example.com\n", prog);
     printf("  %s --profile mybot --humanize 50\n", prog);
     printf("  %s --proxy socks5://127.0.0.1:1080 --ua 'Mozilla/5.0'\n", prog);
+}
+
+// Auto-inject extensions when pages finish loading
+static void on_load_changed(WebKitWebView *web_view,
+                             WebKitLoadEvent event,
+                             gpointer user_data) {
+    (void)user_data;
+    if (event == WEBKIT_LOAD_FINISHED) {
+        const char *uri = webkit_web_view_get_uri(web_view);
+        if (uri) {
+            extensions_inject_for_url(web_view, uri);
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {
