@@ -764,6 +764,55 @@ char *command_process(BrowserState *state, const char *line) {
         extensions_unload_all();
         result = json_ok();
     }
+    else if (strcmp(cmd, "extension-inject") == 0) {
+        // Direct injection: read extension files and eval them
+        const char *uri = browser_get_url(state);
+        int injected = 0;
+        // Read each loaded extension's code directly and eval it
+        for (int ei = 0; ei < extensions_count(); ei++) {
+            char **files = NULL;
+            // Get the filepath for this extension
+            // We'll read the extension code from the stored Extension struct
+            // For now, just eval the code we have
+        }
+        // Simpler approach: re-read and eval all .js files from extensions dir
+        DIR *dir = opendir("/home/gtkbrowser/extensions");
+        if (dir) {
+            struct dirent *entry;
+            while ((entry = readdir(dir)) != NULL) {
+                if (entry->d_name[0] == '.') continue;
+                char *dot = strrchr(entry->d_name, '.');
+                if (!dot || (strcmp(dot, ".js") != 0 && strcmp(dot + 1, ".user.js") != 0))
+                    continue;
+                char fullpath[1024];
+                snprintf(fullpath, sizeof(fullpath), "/home/gtkbrowser/extensions/%s", entry->d_name);
+                FILE *f = fopen(fullpath, "r");
+                if (!f) continue;
+                fseek(f, 0, SEEK_END);
+                long fsize = ftell(f);
+                fseek(f, 0, SEEK_SET);
+                char *code = g_malloc(fsize + 1);
+                fread(code, 1, fsize, f);
+                code[fsize] = '\0';
+                fclose(f);
+                // Strip GES/UserScript header
+                char *code_start = strstr(code, "==/GES==");
+                if (!code_start) code_start = strstr(code, "==/UserScript==");
+                if (code_start) {
+                    code_start += 9;
+                    while (*code_start == '\n' || *code_start == '\r') code_start++;
+                }
+                // Eval it
+                char *res = page_eval_js(state->web_view, code_start ? code_start : code);
+                if (res) g_free(res);
+                g_free(code);
+                injected++;
+            }
+            closedir(dir);
+        }
+        if (uri) g_free((char*)uri);
+        result = json_result("injected", injected > 0 ? "true" : "false");
+    }
     else if (strcmp(cmd, "extension-count") == 0) {
         char count_str[16];
         snprintf(count_str, sizeof(count_str), "%d", extensions_count());

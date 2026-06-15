@@ -1,0 +1,19 @@
+{
+    "manifest_version": 2,
+    "name": "Cookie Manager",
+    "version": "1.0.0",
+    "description": "Read, edit, and manage cookies for any website",
+    "author": "Axon",
+    "content_scripts": [
+        {
+            "matches": ["https://*/*", "http://*/*"],
+            "js": ["content.js"],
+            "run_at": "document_end"
+        }
+    ],
+    "background": {
+        "scripts": ["background.js"],
+        "persistent": true
+    },
+    "permissions": ["storage"]
+}

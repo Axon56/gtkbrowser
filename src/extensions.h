@@ -23,3 +23,6 @@ char *extensions_list_json(void);
 int extensions_count(void);
 
 #endif // EXTENSIONS_H
+
+// Synchronous injection using page_eval_js
+void extensions_inject_sync(WebKitWebView *web_view, const char *url);
