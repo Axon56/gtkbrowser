@@ -197,7 +197,7 @@ int extensions_load_dir(const char *dirpath) {
     }
 
     closedir(dir);
-    fprintf(stderr, "GTKBrowser: Loaded %d extensions from %s\n", count, dirpath);
+    fprintf(stderr, "AxonBrowser: Loaded %d extensions from %s\n", count, dirpath);
     return count;
 }
 
@@ -207,7 +207,7 @@ int extensions_load_file(const char *filepath) {
     if (!ext) return 0;
 
     g_ptr_array_add(g_extensions, ext);
-    fprintf(stderr, "GTKBrowser: Loaded extension '%s' (%s)\n",
+    fprintf(stderr, "AxonBrowser: Loaded extension '%s' (%s)\n",
             ext->name, ext->filepath);
     return 1;
 }
@@ -217,7 +217,7 @@ void extensions_unload_all(void) {
     if (g_extensions) {
         g_ptr_array_set_size(g_extensions, 0);
     }
-    fprintf(stderr, "GTKBrowser: All extensions unloaded\n");
+    fprintf(stderr, "AxonBrowser: All extensions unloaded\n");
 }
 
 // Get list of loaded extensions as JSON

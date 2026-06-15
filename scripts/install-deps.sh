@@ -1,8 +1,8 @@
 #!/bin/bash
-# Install dependencies for GTKBrowser
+# Install dependencies for AxonBrowser
 set -e
 
-echo "Installing GTKBrowser dependencies..."
+echo "Installing AxonBrowser dependencies..."
 
 if command -v apt-get &>/dev/null; then
     # Debian/Ubuntu
@@ -63,5 +63,5 @@ echo "  cmake .."
 echo "  make -j\$(nproc)"
 echo ""
 echo "Run with:"
-echo "  ./gtkbrowser https://example.com"
-echo "  echo 'click 100 200' | ./gtkbrowser"
+echo "  ./axonbrowser https://example.com"
+echo "  echo 'click 100 200' | ./axonbrowser"

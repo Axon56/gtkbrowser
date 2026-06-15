@@ -71,7 +71,7 @@ bool video_start_record(const char *filepath, int fps) {
         _exit(1);
     } else if (g_ffmpeg_pid > 0) {
         g_recording = true;
-        fprintf(stderr, "GTKBrowser: Recording started → %s (pid %d, %s, %dfps)\n",
+        fprintf(stderr, "AxonBrowser: Recording started → %s (pid %d, %s, %dfps)\n",
                 filepath, g_ffmpeg_pid, padded_size, fps);
         return true;
     }
@@ -88,7 +88,7 @@ bool video_stop_record(void) {
     int status;
     waitpid(g_ffmpeg_pid, &status, 0);
 
-    fprintf(stderr, "GTKBrowser: Recording stopped → %s\n", g_output_path);
+    fprintf(stderr, "AxonBrowser: Recording stopped → %s\n", g_output_path);
 
     g_recording = false;
     g_ffmpeg_pid = 0;

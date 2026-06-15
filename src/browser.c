@@ -6,7 +6,7 @@ static void on_ready(GtkApplication *app, gpointer user_data) {
     BrowserState *state = (BrowserState *)user_data;
 
     state->window = gtk_application_window_new(app);
-    gtk_window_set_title(GTK_WINDOW(state->window), "GTKBrowser");
+    gtk_window_set_title(GTK_WINDOW(state->window), "AxonBrowser");
     gtk_window_set_default_size(GTK_WINDOW(state->window),
                                 state->window_width, state->window_height);
 

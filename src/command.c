@@ -860,7 +860,7 @@ static gboolean on_server_readable(GIOChannel *channel,
     g_io_add_watch(client_channel, G_IO_IN | G_IO_HUP,
                    on_client_readable, state);
 
-    fprintf(stderr, "GTKBrowser: client connected (fd %d)\n", client_fd);
+    fprintf(stderr, "AxonBrowser: client connected (fd %d)\n", client_fd);
     return TRUE; // keep listening for more clients
 }
 
@@ -907,7 +907,7 @@ int command_init(BrowserState *state, const char *socket_path) {
                                              on_server_readable,
                                              state);
 
-    fprintf(stderr, "GTKBrowser: listening on %s\n", socket_path);
+    fprintf(stderr, "AxonBrowser: listening on %s\n", socket_path);
     return 0;
 }
 

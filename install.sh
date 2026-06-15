@@ -1,12 +1,12 @@
 #!/bin/bash
 set -e
 
-BINARY_NAME="gtkbrowser"
+BINARY_NAME="axonbrowser"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
-REPO="https://github.com/Axon56/gtkbrowser.git"
-TMPDIR="/tmp/gtkbrowser_install_$$"
+REPO="https://github.com/Axon56/axonbrowser.git"
+TMPDIR="/tmp/axonbrowser_install_$$"
 
-echo "🔧 GTKBrowser Installer"
+echo "🔧 AxonBrowser Installer"
 echo "========================"
 echo ""
 
@@ -55,7 +55,7 @@ case $PKG_MANAGER in
 esac
 
 echo ""
-echo "📥 Cloning GTKBrowser..."
+echo "📥 Cloning AxonBrowser..."
 rm -rf "$TMPDIR"
 git clone --depth 1 "$REPO" "$TMPDIR"
 
@@ -76,19 +76,19 @@ cd /
 rm -rf "$TMPDIR"
 
 # Verify installation
-if command -v gtkbrowser &>/dev/null; then
+if command -v axonbrowser &>/dev/null; then
     echo ""
-    echo "✅ GTKBrowser installed successfully!"
+    echo "✅ AxonBrowser installed successfully!"
     echo ""
-    echo "   Binary: $(which gtkbrowser)"
-    echo "   Version: $(gtkbrowser --help 2>&1 | head -1 || echo 'unknown')"
+    echo "   Binary: $(which axonbrowser)"
+    echo "   Version: $(axonbrowser --help 2>&1 | head -1 || echo 'unknown')"
     echo ""
     echo "   Quick start:"
-    echo "     gtkbrowser --headless https://example.com"
+    echo "     axonbrowser --headless https://example.com"
     echo ""
 else
     echo ""
-    echo "⚠️  GTKBrowser installed to $INSTALL_DIR"
+    echo "⚠️  AxonBrowser installed to $INSTALL_DIR"
     echo "   Add to PATH: export PATH=\"$INSTALL_DIR:\$PATH\""
     echo ""
     echo "   Quick start:"

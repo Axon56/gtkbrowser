@@ -1,6 +1,6 @@
-# GTKBrowser Extension Standard (GES) v2.0
+# AxonBrowser Extension Standard (GES) v2.0
 
-GTKBrowser has its own extension format. Just like Chrome has `manifest.json` + background + content scripts, and Firefox has `manifest.json` + WebExtension API — we have GES: a purpose-built standard for browser automation.
+AxonBrowser has its own extension format. Just like Chrome has `manifest.json` + background + content scripts, and Firefox has `manifest.json` + WebExtension API — we have GES: a purpose-built standard for browser automation.
 
 ## Directory Structure
 
@@ -209,7 +209,7 @@ extension-unload
 ## Extension Directories
 
 GES looks for extensions in:
-1. `~/.config/gtkbrowser/extensions/` (user-level)
+1. `~/.config/axonbrowser/extensions/` (user-level)
 2. `./extensions/` (project-level)
 3. Custom directories via `extension-load`
 

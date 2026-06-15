@@ -1,8 +1,8 @@
 #!/bin/bash
-# Run GTKBrowser in headless mode with Xvfb
+# Run AxonBrowser in headless mode with Xvfb
 set -e
 
-SOCKET_PATH="${1:-/tmp/gtkbrowser.sock}"
+SOCKET_PATH="${1:-/tmp/axonbrowser.sock}"
 
 # Start Xvfb if not already running
 if ! pgrep -x Xvfb > /dev/null 2>&1; then
@@ -15,7 +15,7 @@ else
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BINARY="${SCRIPT_DIR}/../build/gtkbrowser"
+BINARY="${SCRIPT_DIR}/../build/axonbrowser"
 
 if [ ! -f "$BINARY" ]; then
     echo "Binary not found. Building first..."
@@ -23,8 +23,8 @@ if [ ! -f "$BINARY" ]; then
     mkdir -p build && cd build
     cmake ..
     make -j$(nproc)
-    BINARY="./gtkbrowser"
+    BINARY="./axonbrowser"
 fi
 
-echo "Starting GTKBrowser on $SOCKET_PATH..."
+echo "Starting AxonBrowser on $SOCKET_PATH..."
 exec "$BINARY" --headless --socket "$SOCKET_PATH" "$@"

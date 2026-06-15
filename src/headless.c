@@ -37,15 +37,15 @@ static void cleanup_handler(int sig) {
 static bool try_install_xvfb(void) {
     // Check common package managers
     if (system("which apt-get >/dev/null 2>&1") == 0) {
-        fprintf(stderr, "GTKBrowser: Installing Xvfb via apt...\n");
+        fprintf(stderr, "AxonBrowser: Installing Xvfb via apt...\n");
         return (system("apt-get install -y xvfb >/dev/null 2>&1") == 0);
     }
     else if (system("which dnf >/dev/null 2>&1") == 0) {
-        fprintf(stderr, "GTKBrowser: Installing Xvfb via dnf...\n");
+        fprintf(stderr, "AxonBrowser: Installing Xvfb via dnf...\n");
         return (system("dnf install -y xorg-x11-server-Xvfb >/dev/null 2>&1") == 0);
     }
     else if (system("which pacman >/dev/null 2>&1") == 0) {
-        fprintf(stderr, "GTKBrowser: Installing Xvfb via pacman...\n");
+        fprintf(stderr, "AxonBrowser: Installing Xvfb via pacman...\n");
         return (system("pacman -S --noconfirm xorg-server-xvfb >/dev/null 2>&1") == 0);
     }
     return false;
@@ -60,19 +60,19 @@ bool headless_auto_start(void) {
 
     // Check if Xvfb is available
     if (system("which Xvfb >/dev/null 2>&1") != 0) {
-        fprintf(stderr, "GTKBrowser: Xvfb not found. Attempting auto-install...\n");
+        fprintf(stderr, "AxonBrowser: Xvfb not found. Attempting auto-install...\n");
         if (!try_install_xvfb()) {
-            fprintf(stderr, "GTKBrowser: Failed to install Xvfb.\n");
-            fprintf(stderr, "GTKBrowser: Please install manually: apt install xvfb\n");
+            fprintf(stderr, "AxonBrowser: Failed to install Xvfb.\n");
+            fprintf(stderr, "AxonBrowser: Please install manually: apt install xvfb\n");
             return false;
         }
-        fprintf(stderr, "GTKBrowser: Xvfb installed successfully.\n");
+        fprintf(stderr, "AxonBrowser: Xvfb installed successfully.\n");
     }
 
     // Find free display
     g_display_num = find_free_display();
     if (g_display_num < 0) {
-        fprintf(stderr, "GTKBrowser: No free display available.\n");
+        fprintf(stderr, "AxonBrowser: No free display available.\n");
         return false;
     }
 
@@ -106,7 +106,7 @@ bool headless_auto_start(void) {
         signal(SIGTERM, cleanup_handler);
         signal(SIGINT, cleanup_handler);
 
-        fprintf(stderr, "GTKBrowser: Auto-started Xvfb on display %s (pid %d)\n",
+        fprintf(stderr, "AxonBrowser: Auto-started Xvfb on display %s (pid %d)\n",
                 g_display_str, g_xvfb_pid);
         return true;
     }
@@ -118,7 +118,7 @@ void headless_stop(void) {
     if (g_xvfb_pid > 0) {
         kill(g_xvfb_pid, SIGTERM);
         waitpid(g_xvfb_pid, NULL, 0);
-        fprintf(stderr, "GTKBrowser: Stopped Xvfb (pid %d)\n", g_xvfb_pid);
+        fprintf(stderr, "AxonBrowser: Stopped Xvfb (pid %d)\n", g_xvfb_pid);
         g_xvfb_pid = 0;
     }
 }

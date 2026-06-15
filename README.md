@@ -1,8 +1,8 @@
-# GTKBrowser 🌐
+# AxonBrowser 🌐
 
 A lightweight, undetectable browser automation toolkit in 3,000 lines of C.
 
-GTKBrowser drives browsers via **native GTK input events** — not WebDriver, not CDP, not AT-SPI. Clicks, typing, and input go through the exact same code path as a real human user. Anti-bot systems can't tell the difference.
+AxonBrowser drives browsers via **native GTK input events** — not WebDriver, not CDP, not AT-SPI. Clicks, typing, and input go through the exact same code path as a real human user. Anti-bot systems can't tell the difference.
 
 ## Quick Start
 
@@ -15,10 +15,10 @@ mkdir build && cd build
 cmake .. && make -j$(nproc)
 
 # Run headless (auto-starts Xvfb)
-./gtkbrowser --headless https://example.com
+./axonbrowser --headless https://example.com
 
 # Run with interactive window
-./gtkbrowser https://example.com
+./axonbrowser https://example.com
 ```
 
 ## Features
@@ -43,19 +43,19 @@ cmake .. && make -j$(nproc)
 
 ```bash
 # Headless with auto-Xvfb
-./gtkbrowser --headless https://example.com
+./axonbrowser --headless https://example.com
 
 # With proxy and custom user agent
-./gtkbrowser --proxy socks5://127.0.0.1:1080 --ua "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)"
+./axonbrowser --proxy socks5://127.0.0.1:1080 --ua "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)"
 
 # With humanization level 75
-./gtkbrowser --humanize 75
+./axonbrowser --humanize 75
 
 # Persistent profile
-./gtkbrowser --profile mybot --humanize 50
+./axonbrowser --profile mybot --humanize 50
 
 # Interactive window
-./gtkbrowser https://example.com
+./axonbrowser https://example.com
 ```
 
 ### CLI Flags
@@ -78,10 +78,10 @@ Send commands via **stdin** or **Unix socket**:
 
 ```bash
 # Via stdin
-echo "goto https://example.com" | ./gtkbrowser --headless
+echo "goto https://example.com" | ./axonbrowser --headless
 
 # Via socket
-./gtkbrowser --socket /tmp/browser.sock
+./axonbrowser --socket /tmp/browser.sock
 echo "goto https://example.com" | socat - UNIX-CONNECT:/tmp/browser.sock
 ```
 
@@ -265,7 +265,7 @@ Levels:
 ## Architecture
 
 ```
-gtkbrowser/
+axonbrowser/
 ├── src/
 │   ├── main.c          — entry point, CLI args
 │   ├── browser.c/.h    — GTK window, tabs, WebKit
@@ -286,10 +286,10 @@ gtkbrowser/
 
 ## How It Works
 
-GTKBrowser uses **native GTK input events** at the widget level:
+AxonBrowser uses **native GTK input events** at the widget level:
 
 ```
-Your command → Unix socket → GTKBrowser
+Your command → Unix socket → AxonBrowser
   → GdkEventButton/GdkEventKey
   → WebKit processes as real input
   → DOM receives native MouseEvent/KeyboardEvent
@@ -301,11 +301,11 @@ This is fundamentally different from:
 - **CDP/DevTools** — uses Chrome DevTools Protocol (detectable)
 - **AT-SPI** — uses accessibility API (flaky, requires display server)
 
-GTKBrowser events go through the same code path as a real mouse click from the OS. Anti-bot systems cannot distinguish them from human input.
+AxonBrowser events go through the same code path as a real mouse click from the OS. Anti-bot systems cannot distinguish them from human input.
 
 ## Comparison
 
-| Feature | GTKBrowser | Playwright | CDP |
+| Feature | AxonBrowser | Playwright | CDP |
 |---------|-----------|------------|-----|
 | Binary size | 90KB | ~350MB | ~200MB |
 | navigator.webdriver | false ✅ | true ❌ | true ❌ |

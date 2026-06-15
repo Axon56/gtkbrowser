@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
-project(gtkbrowser VERSION 1.1.0 LANGUAGES C)
+project(axonbrowser VERSION 1.1.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Pass version to C code
-add_definitions(-DGTKBROWSER_VERSION="${PROJECT_VERSION}")
+add_definitions(-DAXONBROWSER_VERSION="${PROJECT_VERSION}")
 
 # Find required packages
 find_package(PkgConfig REQUIRED)
@@ -32,9 +32,9 @@ set(SOURCES
 )
 
 # Build
-add_executable(gtkbrowser ${SOURCES})
+add_executable(axonbrowser ${SOURCES})
 
-target_include_directories(gtkbrowser PRIVATE
+target_include_directories(axonbrowser PRIVATE
     ${GTK3_INCLUDE_DIRS}
     ${WEBKIT_INCLUDE_DIRS}
     ${JSONGLIB_INCLUDE_DIRS}
@@ -42,7 +42,7 @@ target_include_directories(gtkbrowser PRIVATE
     src
 )
 
-target_link_libraries(gtkbrowser PRIVATE
+target_link_libraries(axonbrowser PRIVATE
     ${GTK3_LIBRARIES}
     ${WEBKIT_LIBRARIES}
     ${JSONGLIB_LIBRARIES}
@@ -50,11 +50,11 @@ target_link_libraries(gtkbrowser PRIVATE
     m
 )
 
-target_compile_options(gtkbrowser PRIVATE
+target_compile_options(axonbrowser PRIVATE
     ${GTK3_CFLAGS_OTHER}
     ${WEBKIT_CFLAGS_OTHER}
     ${JSONGLIB_CFLAGS_OTHER}
 )
 
 # Install
-install(TARGETS gtkbrowser DESTINATION bin)
+install(TARGETS axonbrowser DESTINATION bin)

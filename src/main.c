@@ -31,7 +31,7 @@ static void on_activate(GtkApplication *app, gpointer user_data) {
     BrowserState *state = (BrowserState *)user_data;
 
     state->window = gtk_application_window_new(app);
-    gtk_window_set_title(GTK_WINDOW(state->window), "GTKBrowser");
+    gtk_window_set_title(GTK_WINDOW(state->window), "AxonBrowser");
     gtk_window_set_default_size(GTK_WINDOW(state->window),
                                 state->window_width, state->window_height);
 
@@ -71,9 +71,9 @@ static void on_activate(GtkApplication *app, gpointer user_data) {
     } else {
         // Add our name to the default UA
         webkit_settings_set_user_agent_with_application_details(
-            state->settings, "GTKBrowser",
-#ifdef GTKBROWSER_VERSION
-            GTKBROWSER_VERSION
+            state->settings, "AxonBrowser",
+#ifdef AXONBROWSER_VERSION
+            AXONBROWSER_VERSION
 #else
             "1.0"
 #endif
@@ -96,12 +96,12 @@ static void on_activate(GtkApplication *app, gpointer user_data) {
         webkit_web_view_load_uri(state->web_view, state->current_url);
     }
 
-    printf("GTKBrowser ready.\n");
+    printf("AxonBrowser ready.\n");
     fflush(stdout);
 }
 
 static void print_usage(const char *prog) {
-    printf("GTKBrowser — native-input browser automation\n\n");
+    printf("AxonBrowser — native-input browser automation\n\n");
     printf("Usage:\n");
     printf("  %s [options] [url]\n\n", prog);
     printf("Options:\n");
@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Create and run GTK application
-    g_app = gtk_application_new("com.axon.gtkbrowser",
+    g_app = gtk_application_new("com.axon.axonbrowser",
                                  G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(g_app, "activate", G_CALLBACK(on_activate), g_state);
 

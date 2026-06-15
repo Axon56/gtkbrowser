@@ -1,8 +1,8 @@
-# GTKBrowser Skill Guide
+# AxonBrowser Skill Guide
 
-## What is GTKBrowser?
+## What is AxonBrowser?
 
-GTKBrowser is a lightweight, undetectable browser automation toolkit written in 3,000 lines of C. It uses native GTK input events to interact with websites — not WebDriver, not CDP, not AT-SPI. This means anti-bot systems can't detect it because every click and keystroke goes through the exact same code path as a real human user.
+AxonBrowser is a lightweight, undetectable browser automation toolkit written in 3,000 lines of C. It uses native GTK input events to interact with websites — not WebDriver, not CDP, not AT-SPI. This means anti-bot systems can't detect it because every click and keystroke goes through the exact same code path as a real human user.
 
 **Why it's special:**
 - 90KB binary (vs 200MB+ for Chrome/Chromium)
@@ -18,14 +18,14 @@ GTKBrowser is a lightweight, undetectable browser automation toolkit written in 
 
 ### One-liner (Linux)
 ```bash
-bash <(curl -sSL https://raw.githubusercontent.com/Axon56/gtkbrowser/master/install.sh)
+bash <(curl -sSL https://raw.githubusercontent.com/Axon56/axonbrowser/master/install.sh)
 ```
 
 ### Manual install
 ```bash
 # Clone
-git clone https://github.com/Axon56/gtkbrowser.git
-cd gtkbrowser
+git clone https://github.com/Axon56/axonbrowser.git
+cd axonbrowser
 
 # Build
 mkdir build && cd build
@@ -47,19 +47,19 @@ sudo make install
 
 ```bash
 # Basic usage
-gtkbrowser https://example.com
+axonbrowser https://example.com
 
 # Headless (auto-starts Xvfb)
-gtkbrowser --headless https://example.com
+axonbrowser --headless https://example.com
 
 # With socket (for sending commands)
-gtkbrowser --headless --socket /tmp/browser.sock
+axonbrowser --headless --socket /tmp/browser.sock
 
 # With proxy
-gtkbrowser --headless --proxy "http://user:pass@host:port"
+axonbrowser --headless --proxy "http://user:pass@host:port"
 
 # Mobile viewport
-gtkbrowser --headless --proxy "http://user:pass@host:port"
+axonbrowser --headless --proxy "http://user:pass@host:port"
 # Then: viewport 390 844
 ```
 
@@ -71,10 +71,10 @@ Commands are sent via stdin or Unix socket:
 
 ```bash
 # Via stdin
-echo "goto https://example.com" | gtkbrowser --headless
+echo "goto https://example.com" | axonbrowser --headless
 
 # Via socket (persistent session)
-gtkbrowser --headless --socket /tmp/browser.sock &
+axonbrowser --headless --socket /tmp/browser.sock &
 echo "goto https://example.com" | socat - UNIX-CONNECT:/tmp/browser.sock
 echo "screenshot /tmp/page.png" | socat - UNIX-CONNECT:/tmp/browser.sock
 ```
@@ -211,7 +211,7 @@ echo "record-video stop" | socat - UNIX-CONNECT:/tmp/browser.sock
 
 ### Example 5: With proxy
 ```bash
-gtkbrowser --headless --proxy "http://user:pass@host:port" --socket /tmp/browser.sock
+axonbrowser --headless --proxy "http://user:pass@host:port" --socket /tmp/browser.sock
 ```
 
 ---
@@ -232,7 +232,7 @@ echo "humanize 75" | socat - UNIX-CONNECT:/tmp/browser.sock
 
 ---
 
-## How GTKBrowser Works
+## How AxonBrowser Works
 
 1. **Command Parsing** — Commands are received via Unix socket or stdin
 2. **GTK Event Injection** — Commands are translated to native GDK events (GdkEventButton, GdkEventKey)
@@ -244,4 +244,4 @@ This is fundamentally different from:
 - **CDP/DevTools** — Uses Chrome DevTools Protocol (detectable)
 - **AT-SPI** — Uses accessibility API (flaky)
 
-GTKBrowser events are indistinguishable from real human input.
+AxonBrowser events are indistinguishable from real human input.
