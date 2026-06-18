@@ -18,17 +18,39 @@ pkg_check_modules(CLIB REQUIRED libcurl)
 
 # Source files
 set(SOURCES
+    # Core
     src/main.c
     src/browser.c
-    src/input.c
     src/command.c
-    src/screenshot.c
+
+    # Commands (command handlers)
+    src/commands/core.c
+    src/commands/navigation.c
+    src/commands/input.c
+    src/commands/elements.c
+    src/commands/screenshot.c
+    src/commands/tabs.c
+    src/commands/storage.c
+    src/commands/media.c
+    src/commands/monitoring.c
+    src/commands/extensions.c
+    src/commands/window.c
+
+    # Feature implementations
     src/page.c
+    src/input.c
     src/humanize.c
-    src/profile.c
-    src/headless.c
+    src/screenshot.c
     src/video.c
+    src/profile.c
     src/extensions.c
+    src/headless.c
+
+    # Sub-module implementations
+    src/navigation/navigation.c
+    src/elements/elements.c
+    src/monitor/monitoring.c
+    src/media/media.c
 )
 
 # Build
