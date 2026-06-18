@@ -1,0 +1,228 @@
+#!/bin/bash
+# AxonBrowser CLI - clean command interface
+# Usage: axon goto https://example.com
+#        axon click "#submit"
+#        axon screenshot page.png
+
+SOCK="${AXON_SOCK:-/tmp/gtk.sock}"
+PROXY="${AXON_PROXY:-}"
+UA="${AXON_UA:-}"
+
+# Build flags
+FLAGS=""
+[ -n "$PROXY" ] && FLAGS="$FLAGS --proxy $PROXY"
+[ -n "$UA" ] && FLAGS="$FLAGS --ua $UA"
+
+# Check if server is running
+is_running() {
+    echo "url" | socat - UNIX-CONNECT:$SOCK 2>/dev/null | grep -q "http"
+}
+
+# Start browser if not running
+ensure_running() {
+    if ! is_running; then
+        axonbrowser $FLAGS --socket "$SOCK" &
+        sleep 2
+        echo "started" >&2
+    fi
+}
+
+# Send command
+send() {
+    ensure_running
+    echo "$*" | socat - UNIX-CONNECT:$SOCK
+}
+
+# Main
+case "$1" in
+    start)
+        ensure_running
+        echo "browser started on $SOCK"
+        ;;
+    stop)
+        pkill -f "axonbrowser.*$SOCK" 2>/dev/null
+        echo "browser stopped"
+        ;;
+    status)
+        if is_running; then
+            echo "running"
+        else
+            echo "stopped"
+        fi
+        ;;
+    goto|open)
+        send "goto $2"
+        ;;
+    back|forward|reload)
+        send "$1"
+        ;;
+    click)
+        send "click $2 $3 $4"
+        ;;
+    type)
+        send "type $2"
+        ;;
+    typeinto)
+        send "typeinto $2 $3"
+        ;;
+    key)
+        send "key $2"
+        ;;
+    scroll)
+        send "scroll ${2:-0} ${3:-400}"
+        ;;
+    screenshot)
+        send "screenshot ${2:-screenshot.png}"
+        ;;
+    screenshot-viewport)
+        send "screenshot viewport ${2:-screenshot.png}"
+        ;;
+    eval)
+        send "eval $2"
+        ;;
+    text)
+        send "text"
+        ;;
+    html)
+        send "content"
+        ;;
+    tabs)
+        send "tabs"
+        ;;
+    newtab)
+        send "newtab $2"
+        ;;
+    tab)
+        send "tab $2"
+        ;;
+    url)
+        send "url"
+        ;;
+    title)
+        send "title"
+        ;;
+    viewport)
+        send "viewport $2 $3"
+        ;;
+    resize)
+        send "resize $2 $3"
+        ;;
+    extension-load)
+        send "extension-load $2"
+        ;;
+    extension-inject)
+        send "extension-inject"
+        ;;
+    extension-list)
+        send "extension-list"
+        ;;
+    record-video)
+        send "record-video $2 $3 $4"
+        ;;
+    net-log)
+        send "net-log"
+        ;;
+    net-stop)
+        send "net-stop"
+        ;;
+    net-requests)
+        send "net-requests"
+        ;;
+    perf-timing)
+        send "perf-timing"
+        ;;
+    a11y)
+        send "inspect"
+        ;;
+    a11y-audit)
+        send "a11y-audit"
+        ;;
+    dismiss)
+        send "dismiss"
+        ;;
+    ls-get|ls-set|ls-all|ss-get|ss-set)
+        send "$@"
+        ;;
+    clipboard)
+        send "clipboard $2"
+        ;;
+    find)
+        send "find $2"
+        ;;
+    elements)
+        send "elements"
+        ;;
+    *)
+        echo "AxonBrowser CLI"
+        echo ""
+        echo "Usage: axon <command> [args]"
+        echo ""
+        echo "Navigation:"
+        echo "  axon goto <url>          Go to URL"
+        echo "  axon back                Go back"
+        echo "  axon forward             Go forward"
+        echo "  axon reload              Reload page"
+        echo "  axon url                 Get current URL"
+        echo "  axon title               Get page title"
+        echo ""
+        echo "Input:"
+        echo "  axon click <x> <y>       Click at coordinates"
+        echo "  axon click <selector>    Click element"
+        echo "  axon type <text>         Type text"
+        echo "  axon typeinto <sel> <t>  Click and type"
+        echo "  axon key <key>           Press key"
+        echo ""
+        echo "Elements:"
+        echo "  axon find <selector>     Find element"
+        echo "  axon elements            List all elements"
+        echo "  axon text                Get page text"
+        echo "  axon html                Get page HTML"
+        echo "  axon dismiss             Dismiss overlays"
+        echo ""
+        echo "Screenshots:"
+        echo "  axon screenshot <file>   Take screenshot"
+        echo "  axon screenshot-viewport <file>"
+        echo ""
+        echo "Tabs:"
+        echo "  axon tabs                List tabs"
+        echo "  axon newtab [url]        Open new tab"
+        echo "  axon tab <index>         Switch tab"
+        echo ""
+        echo "Extensions:"
+        echo "  axon extension-load <dir>    Load extensions"
+        echo "  axon extension-inject        Inject extensions"
+        echo "  axon extension-list          List extensions"
+        echo ""
+        echo "Recording:"
+        echo "  axon record-video start <file> [fps]"
+        echo "  axon record-video stop"
+        echo "  axon record-video status"
+        echo ""
+        echo "Monitoring:"
+        echo "  axon net-log              Start network logging"
+        echo "  axon net-requests         Get logged requests"
+        echo "  axon perf-timing          Get page load timing"
+        echo "  axon a11y-audit           Accessibility audit"
+        echo ""
+        echo "Storage:"
+        echo "  axon ls-get <key>        Get localStorage"
+        echo "  axon ls-set <key> <val>  Set localStorage"
+        echo "  axon ls-all              Get all localStorage"
+        echo "  axon clipboard read      Read clipboard"
+        echo "  axon clipboard write <t> Write to clipboard"
+        echo ""
+        echo "Environment:"
+        echo "  AXON_SOCK=/tmp/gtk.sock"
+        echo "  AXON_PROXY=http://user:pass@host:port"
+        echo "  AXON_UA=\"custom user agent\""
+        echo ""
+        echo "Examples:"
+        echo "  axon start"
+        echo "  axon goto https://google.com"
+        echo "  axon type \"hello world\""
+        echo "  axon screenshot page.png"
+        echo "  axon extension-load ~/.config/axonbrowser/extensions"
+        echo "  axon extension-inject"
+        echo "  axon eval \"document.title\""
+        ;;
+esac

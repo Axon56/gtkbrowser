@@ -2,6 +2,42 @@
 #include "page.h"
 #include <string.h>
 
+static void on_url_entry_activate(GtkEntry *entry, gpointer user_data) {
+    BrowserState *state = (BrowserState *)user_data;
+    const char *url = gtk_entry_get_text(entry);
+    if (url && url[0]) {
+        webkit_web_view_load_uri(state->web_view, url);
+    }
+}
+
+static void on_back_clicked(GtkButton *button, gpointer user_data) {
+    (void)button;
+    BrowserState *state = (BrowserState *)user_data;
+    webkit_web_view_go_back(state->web_view);
+}
+
+static void on_forward_clicked(GtkButton *button, gpointer user_data) {
+    (void)button;
+    BrowserState *state = (BrowserState *)user_data;
+    webkit_web_view_go_forward(state->web_view);
+}
+
+static void on_reload_clicked(GtkButton *button, gpointer user_data) {
+    (void)button;
+    BrowserState *state = (BrowserState *)user_data;
+    webkit_web_view_reload(state->web_view);
+}
+
+static void on_uri_changed(WebKitWebView *web_view, GParamSpec *pspec, gpointer user_data) {
+    (void)pspec;
+    BrowserState *state = (BrowserState *)user_data;
+    if (!state->url_entry) return;
+    const char *uri = webkit_web_view_get_uri(web_view);
+    if (uri) {
+        gtk_entry_set_text(GTK_ENTRY(state->url_entry), uri);
+    }
+}
+
 static void on_ready(GtkApplication *app, gpointer user_data) {
     BrowserState *state = (BrowserState *)user_data;
 
@@ -10,24 +46,75 @@ static void on_ready(GtkApplication *app, gpointer user_data) {
     gtk_window_set_default_size(GTK_WINDOW(state->window),
                                 state->window_width, state->window_height);
 
-    // Scrolled window wraps the web view
+    // Main vertical layout
+    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_container_add(GTK_CONTAINER(state->window), vbox);
+
+    // === Navigation bar ===
+    GtkWidget *nav_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+    gtk_widget_set_margin_start(nav_bar, 4);
+    gtk_widget_set_margin_end(nav_bar, 4);
+    gtk_widget_set_margin_top(nav_bar, 4);
+    gtk_widget_set_margin_bottom(nav_bar, 4);
+    gtk_box_pack_start(GTK_BOX(vbox), nav_bar, FALSE, FALSE, 0);
+
+    // Back button
+    GtkWidget *back_btn = gtk_button_new_with_label("◀");
+    gtk_widget_set_size_request(back_btn, 36, 28);
+    g_signal_connect(back_btn, "clicked", G_CALLBACK(on_back_clicked), state);
+    gtk_box_pack_start(GTK_BOX(nav_bar), back_btn, FALSE, FALSE, 0);
+
+    // Forward button
+    GtkWidget *fwd_btn = gtk_button_new_with_label("▶");
+    gtk_widget_set_size_request(fwd_btn, 36, 28);
+    g_signal_connect(fwd_btn, "clicked", G_CALLBACK(on_forward_clicked), state);
+    gtk_box_pack_start(GTK_BOX(nav_bar), fwd_btn, FALSE, FALSE, 0);
+
+    // Reload button
+    GtkWidget *reload_btn = gtk_button_new_with_label("↻");
+    gtk_widget_set_size_request(reload_btn, 36, 28);
+    g_signal_connect(reload_btn, "clicked", G_CALLBACK(on_reload_clicked), state);
+    gtk_box_pack_start(GTK_BOX(nav_bar), reload_btn, FALSE, FALSE, 0);
+
+    // URL entry
+    state->url_entry = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(state->url_entry), "Enter URL...");
+    g_signal_connect(state->url_entry, "activate", G_CALLBACK(on_url_entry_activate), state);
+    gtk_box_pack_start(GTK_BOX(nav_bar), state->url_entry, TRUE, TRUE, 0);
+
+    // === Tab bar ===
+    GtkWidget *tab_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_widget_set_margin_start(tab_bar, 4);
+    gtk_widget_set_margin_end(tab_bar, 4);
+    gtk_widget_set_margin_bottom(tab_bar, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), tab_bar, FALSE, FALSE, 0);
+
+    // Tab 1
+    GtkWidget *tab1 = gtk_button_new_with_label("Tab 1");
+    gtk_widget_set_size_request(tab1, 100, 24);
+    gtk_box_pack_start(GTK_BOX(tab_bar), tab1, TRUE, TRUE, 0);
+
+    // New tab button
+    GtkWidget *new_tab_btn = gtk_button_new_with_label("+");
+    gtk_widget_set_size_request(new_tab_btn, 28, 24);
+    gtk_box_pack_start(GTK_BOX(tab_bar), new_tab_btn, FALSE, FALSE, 4);
+
+    // === Web view ===
     state->scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-    gtk_container_add(GTK_CONTAINER(state->window), state->scrolled_window);
+    gtk_box_pack_start(GTK_BOX(vbox), state->scrolled_window, TRUE, TRUE, 0);
 
-    // Create the web view
     state->web_view = WEBKIT_WEB_VIEW(webkit_web_view_new());
-
-    // Configure settings
     state->settings = webkit_settings_new();
     webkit_settings_set_javascript_can_open_windows_automatically(state->settings, FALSE);
     webkit_settings_set_allow_modal_dialogs(state->settings, FALSE);
     webkit_settings_set_enable_smooth_scrolling(state->settings, TRUE);
     webkit_web_view_set_settings(state->web_view, state->settings);
 
-    gtk_container_add(GTK_CONTAINER(state->scrolled_window),
-                      GTK_WIDGET(state->web_view));
+    gtk_container_add(GTK_CONTAINER(state->scrolled_window), GTK_WIDGET(state->web_view));
 
-    // Initialize tabs list with this first web view
+    // Update URL bar when page changes
+    g_signal_connect(state->web_view, "notify::uri", G_CALLBACK(on_uri_changed), state);
+
     state->tabs = g_list_append(NULL, state->web_view);
     state->active_tab = 0;
 

@@ -8,6 +8,7 @@
 typedef struct {
     GtkWidget *window;
     GtkWidget *scrolled_window;
+    GtkWidget *url_entry;
     WebKitWebView *web_view;
     WebKitWebContext *web_context;
     WebKitSettings *settings;
