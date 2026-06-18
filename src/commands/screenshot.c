@@ -1,6 +1,6 @@
 #include "screenshot.h"
 #include "cmd_utils.h"
-#include "../screenshot.h"
+#include "../media/screenshot.h"
 #include "../page.h"
 
 char *cmd_screenshot(BrowserState *state, const char *cmd, int argc, char **parts) {

@@ -1,7 +1,7 @@
 #include "media.h"
 #include "cmd_utils.h"
 #include "../page.h"
-#include "../video.h"
+#include "../media/video.h"
 
 char *cmd_media(BrowserState *state, const char *cmd, int argc, char **parts) {
     if (strcmp(cmd, "clipboard") == 0 && argc >= 2) {

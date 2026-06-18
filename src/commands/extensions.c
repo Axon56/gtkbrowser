@@ -1,6 +1,6 @@
 #include "extensions.h"
 #include "cmd_utils.h"
-#include "../extensions.h"
+#include "../extensions/extensions.h"
 #include "../page.h"
 #include <stdio.h>
 #include <stdlib.h>

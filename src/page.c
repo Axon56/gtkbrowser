@@ -1,5 +1,5 @@
 #include "page.h"
-#include "input.h"
+#include "input/input.h"
 #include <string.h>
 #include <stdlib.h>
 #include <json-glib/json-glib.h>

@@ -1,4 +1,5 @@
 #include "extensions.h"
+#include "page.h"
 
 // Async callback for synchronous JS injection
 static void on_inject_done(GObject *source, GAsyncResult *result, gpointer user_data) {

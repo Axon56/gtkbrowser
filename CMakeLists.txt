@@ -16,12 +16,15 @@ pkg_check_modules(WEBKIT REQUIRED webkit2gtk-4.0)
 pkg_check_modules(JSONGLIB REQUIRED json-glib-1.0)
 pkg_check_modules(CLIB REQUIRED libcurl)
 
-# Source files
+# Source files — new directory structure
 set(SOURCES
-    # Core
-    src/main.c
-    src/browser.c
-    src/command.c
+    # Core (browser init, command dispatch)
+    src/core/main.c
+    src/core/browser.c
+    src/core/command.c
+
+    # Page / UI core (eval, DOM, dialogs, storage ops, find-in-page)
+    src/page.c
 
     # Commands (command handlers)
     src/commands/core.c
@@ -37,20 +40,17 @@ set(SOURCES
     src/commands/window.c
 
     # Feature implementations
-    src/page.c
-    src/input.c
-    src/humanize.c
-    src/screenshot.c
-    src/video.c
-    src/profile.c
-    src/extensions.c
-    src/headless.c
-
-    # Sub-module implementations
     src/navigation/navigation.c
     src/elements/elements.c
+    src/input/input.c
+    src/input/humanize.c
     src/monitor/monitoring.c
     src/media/media.c
+    src/media/screenshot.c
+    src/media/video.c
+    src/storage/profile.c
+    src/extensions/extensions.c
+    src/headless/headless.c
 )
 
 # Build

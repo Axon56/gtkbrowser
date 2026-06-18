@@ -1,8 +1,8 @@
 #include "input.h"
 #include "cmd_utils.h"
-#include "../input.h"
+#include "../input/input.h"
 #include "../page.h"
-#include "../humanize.h"
+#include "../input/humanize.h"
 
 static char *handle_click_action(BrowserState *state, int argc, char **parts,
                                   void (*click_fn)(WebKitWebView*, int, int)) {
