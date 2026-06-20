@@ -1,8 +1,8 @@
 #!/bin/bash
-# Install dependencies for AxonBrowser
+# Install dependencies for AxonSurf
 set -e
 
-echo "Installing AxonBrowser dependencies..."
+echo "Installing AxonSurf dependencies..."
 
 if command -v apt-get &>/dev/null; then
     # Debian/Ubuntu
@@ -63,5 +63,5 @@ echo "  cmake .."
 echo "  make -j\$(nproc)"
 echo ""
 echo "Run with:"
-echo "  ./axonbrowser https://example.com"
-echo "  echo 'click 100 200' | ./axonbrowser"
+echo "  ./axonsurf https://example.com"
+echo "  echo 'click 100 200' | ./axonsurf"

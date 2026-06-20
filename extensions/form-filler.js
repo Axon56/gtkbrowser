@@ -21,5 +21,5 @@
         }
         return filled;
     };
-    console.log('[AxonBrowser] Form filler ready. Use axonFormFill({selector: value})');
+    console.log('[AxonSurf] Form filler ready. Use axonFormFill({selector: value})');
 })();

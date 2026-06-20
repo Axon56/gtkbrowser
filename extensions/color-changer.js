@@ -7,5 +7,5 @@
 
 (function(){
     document.body.style.color = '#0066cc';
-    console.log('[AxonBrowser] Color changed to blue');
+    console.log('[AxonSurf] Color changed to blue');
 })();

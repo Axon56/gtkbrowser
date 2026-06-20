@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
-project(axonbrowser VERSION 1.1.0 LANGUAGES C)
+project(axonsurf VERSION 1.1.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Pass version to C code
-add_definitions(-DAXONBROWSER_VERSION="${PROJECT_VERSION}")
+add_definitions(-DAXONSURF_VERSION="${PROJECT_VERSION}")
 
 # Find required packages
 find_package(PkgConfig REQUIRED)
@@ -54,9 +54,9 @@ set(SOURCES
 )
 
 # Build
-add_executable(axonbrowser ${SOURCES})
+add_executable(axonsurf ${SOURCES})
 
-target_include_directories(axonbrowser PRIVATE
+target_include_directories(axonsurf PRIVATE
     ${GTK3_INCLUDE_DIRS}
     ${WEBKIT_INCLUDE_DIRS}
     ${JSONGLIB_INCLUDE_DIRS}
@@ -64,7 +64,7 @@ target_include_directories(axonbrowser PRIVATE
     src
 )
 
-target_link_libraries(axonbrowser PRIVATE
+target_link_libraries(axonsurf PRIVATE
     ${GTK3_LIBRARIES}
     ${WEBKIT_LIBRARIES}
     ${JSONGLIB_LIBRARIES}
@@ -72,11 +72,11 @@ target_link_libraries(axonbrowser PRIVATE
     m
 )
 
-target_compile_options(axonbrowser PRIVATE
+target_compile_options(axonsurf PRIVATE
     ${GTK3_CFLAGS_OTHER}
     ${WEBKIT_CFLAGS_OTHER}
     ${JSONGLIB_CFLAGS_OTHER}
 )
 
 # Install
-install(TARGETS axonbrowser DESTINATION bin)
+install(TARGETS axonsurf DESTINATION bin)

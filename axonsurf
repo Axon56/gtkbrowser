@@ -1,8 +1,8 @@
 #!/bin/bash
-# AxonBrowser CLI - clean command interface
-# Usage: axon goto https://example.com
-#        axon click "#submit"
-#        axon screenshot page.png
+# AxonSurf CLI - clean command interface
+# Usage: axonsurf goto https://example.com
+#        axonsurf click "#submit"
+#        axonsurf screenshot page.png
 
 SOCK="${AXON_SOCK:-/tmp/gtk.sock}"
 PROXY="${AXON_PROXY:-}"
@@ -21,7 +21,7 @@ is_running() {
 # Start browser if not running
 ensure_running() {
     if ! is_running; then
-        axonbrowser $FLAGS --socket "$SOCK" &
+        axonsurf $FLAGS --socket "$SOCK" &
         sleep 2
         echo "started" >&2
     fi
@@ -40,7 +40,7 @@ case "$1" in
         echo "browser started on $SOCK"
         ;;
     stop)
-        pkill -f "axonbrowser.*$SOCK" 2>/dev/null
+        pkill -f "axonsurf.*$SOCK" 2>/dev/null
         echo "browser stopped"
         ;;
     status)
@@ -153,63 +153,63 @@ case "$1" in
         send "elements"
         ;;
     *)
-        echo "AxonBrowser CLI"
+        echo "AxonSurf CLI"
         echo ""
-        echo "Usage: axon <command> [args]"
+        echo "Usage: axonsurf <command> [args]"
         echo ""
         echo "Navigation:"
-        echo "  axon goto <url>          Go to URL"
-        echo "  axon back                Go back"
-        echo "  axon forward             Go forward"
-        echo "  axon reload              Reload page"
-        echo "  axon url                 Get current URL"
-        echo "  axon title               Get page title"
+        echo "  axonsurf goto <url>          Go to URL"
+        echo "  axonsurf back                Go back"
+        echo "  axonsurf forward             Go forward"
+        echo "  axonsurf reload              Reload page"
+        echo "  axonsurf url                 Get current URL"
+        echo "  axonsurf title               Get page title"
         echo ""
         echo "Input:"
-        echo "  axon click <x> <y>       Click at coordinates"
-        echo "  axon click <selector>    Click element"
-        echo "  axon type <text>         Type text"
-        echo "  axon typeinto <sel> <t>  Click and type"
-        echo "  axon key <key>           Press key"
+        echo "  axonsurf click <x> <y>       Click at coordinates"
+        echo "  axonsurf click <selector>    Click element"
+        echo "  axonsurf type <text>         Type text"
+        echo "  axonsurf typeinto <sel> <t>  Click and type"
+        echo "  axonsurf key <key>           Press key"
         echo ""
         echo "Elements:"
-        echo "  axon find <selector>     Find element"
-        echo "  axon elements            List all elements"
-        echo "  axon text                Get page text"
-        echo "  axon html                Get page HTML"
-        echo "  axon dismiss             Dismiss overlays"
+        echo "  axonsurf find <selector>     Find element"
+        echo "  axonsurf elements            List all elements"
+        echo "  axonsurf text                Get page text"
+        echo "  axonsurf html                Get page HTML"
+        echo "  axonsurf dismiss             Dismiss overlays"
         echo ""
         echo "Screenshots:"
-        echo "  axon screenshot <file>   Take screenshot"
-        echo "  axon screenshot-viewport <file>"
+        echo "  axonsurf screenshot <file>   Take screenshot"
+        echo "  axonsurf screenshot-viewport <file>"
         echo ""
         echo "Tabs:"
-        echo "  axon tabs                List tabs"
-        echo "  axon newtab [url]        Open new tab"
-        echo "  axon tab <index>         Switch tab"
+        echo "  axonsurf tabs                List tabs"
+        echo "  axonsurf newtab [url]        Open new tab"
+        echo "  axonsurf tab <index>         Switch tab"
         echo ""
         echo "Extensions:"
-        echo "  axon extension-load <dir>    Load extensions"
-        echo "  axon extension-inject        Inject extensions"
-        echo "  axon extension-list          List extensions"
+        echo "  axonsurf extension-load <dir>    Load extensions"
+        echo "  axonsurf extension-inject        Inject extensions"
+        echo "  axonsurf extension-list          List extensions"
         echo ""
         echo "Recording:"
-        echo "  axon record-video start <file> [fps]"
-        echo "  axon record-video stop"
-        echo "  axon record-video status"
+        echo "  axonsurf record-video start <file> [fps]"
+        echo "  axonsurf record-video stop"
+        echo "  axonsurf record-video status"
         echo ""
         echo "Monitoring:"
-        echo "  axon net-log              Start network logging"
-        echo "  axon net-requests         Get logged requests"
-        echo "  axon perf-timing          Get page load timing"
-        echo "  axon a11y-audit           Accessibility audit"
+        echo "  axonsurf net-log              Start network logging"
+        echo "  axonsurf net-requests         Get logged requests"
+        echo "  axonsurf perf-timing          Get page load timing"
+        echo "  axonsurf a11y-audit           Accessibility audit"
         echo ""
         echo "Storage:"
-        echo "  axon ls-get <key>        Get localStorage"
-        echo "  axon ls-set <key> <val>  Set localStorage"
-        echo "  axon ls-all              Get all localStorage"
-        echo "  axon clipboard read      Read clipboard"
-        echo "  axon clipboard write <t> Write to clipboard"
+        echo "  axonsurf ls-get <key>        Get localStorage"
+        echo "  axonsurf ls-set <key> <val>  Set localStorage"
+        echo "  axonsurf ls-all              Get all localStorage"
+        echo "  axonsurf clipboard read      Read clipboard"
+        echo "  axonsurf clipboard write <t> Write to clipboard"
         echo ""
         echo "Environment:"
         echo "  AXON_SOCK=/tmp/gtk.sock"
@@ -217,12 +217,12 @@ case "$1" in
         echo "  AXON_UA=\"custom user agent\""
         echo ""
         echo "Examples:"
-        echo "  axon start"
-        echo "  axon goto https://google.com"
-        echo "  axon type \"hello world\""
-        echo "  axon screenshot page.png"
-        echo "  axon extension-load ~/.config/axonbrowser/extensions"
-        echo "  axon extension-inject"
-        echo "  axon eval \"document.title\""
+        echo "  axonsurf start"
+        echo "  axonsurf goto https://google.com"
+        echo "  axonsurf type \"hello world\""
+        echo "  axonsurf screenshot page.png"
+        echo "  axonsurf extension-load ~/.config/axonsurf/extensions"
+        echo "  axonsurf extension-inject"
+        echo "  axonsurf eval \"document.title\""
         ;;
 esac

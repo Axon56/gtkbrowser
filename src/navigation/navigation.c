@@ -67,7 +67,7 @@ void page_set_viewport(WebKitWebView *web_view, int width, int height) {
     // Set mobile user agent to trigger responsive design
     WebKitSettings *settings = webkit_web_view_get_settings(web_view);
     webkit_settings_set_user_agent_with_application_details(
-        settings, "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1", "AxonBrowser");
+        settings, "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1", "AxonSurf");
 
     // Reload the page so responsive CSS kicks in
     webkit_web_view_reload(web_view);

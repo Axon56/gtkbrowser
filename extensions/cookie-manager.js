@@ -100,5 +100,5 @@
         import: importCookies
     };
 
-    console.log('[AxonBrowser] Cookie Manager loaded. Use window.axonCookies');
+    console.log('[AxonSurf] Cookie Manager loaded. Use window.axonCookies');
 })();

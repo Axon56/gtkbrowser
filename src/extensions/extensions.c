@@ -206,7 +206,7 @@ int extensions_load_dir(const char *dirpath) {
     }
 
     closedir(dir);
-    fprintf(stderr, "AxonBrowser: Loaded %d extensions from %s\n", count, dirpath);
+    fprintf(stderr, "AxonSurf: Loaded %d extensions from %s\n", count, dirpath);
     return count;
 }
 
@@ -216,7 +216,7 @@ int extensions_load_file(const char *filepath) {
     if (!ext) return 0;
 
     g_ptr_array_add(g_extensions, ext);
-    fprintf(stderr, "AxonBrowser: Loaded extension '%s' (%s)\n",
+    fprintf(stderr, "AxonSurf: Loaded extension '%s' (%s)\n",
             ext->name, ext->filepath);
     return 1;
 }
@@ -226,7 +226,7 @@ void extensions_unload_all(void) {
     if (g_extensions) {
         g_ptr_array_set_size(g_extensions, 0);
     }
-    fprintf(stderr, "AxonBrowser: All extensions unloaded\n");
+    fprintf(stderr, "AxonSurf: All extensions unloaded\n");
 }
 
 // Get list of loaded extensions as JSON
@@ -384,7 +384,7 @@ static int extensions_load_ges_dir(const char *dirpath, const char *manifest_pat
 
     g_ptr_array_add(g_extensions, ext);
 
-    fprintf(stderr, "AXONBROWSER: Loaded GES extension '%s' from %s\n", ext->name, dirpath);
+    fprintf(stderr, "AXONSURF: Loaded GES extension '%s' from %s\n", ext->name, dirpath);
 
     g_free(content);
     g_free(js_filename);

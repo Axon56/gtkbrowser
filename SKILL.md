@@ -1,8 +1,8 @@
-# AxonBrowser Skill Guide
+# AxonSurf Skill Guide
 
-## What is AxonBrowser?
+## What is AxonSurf?
 
-AxonBrowser is a lightweight, undetectable browser automation toolkit written in 3,000 lines of C. It uses native GTK input events to interact with websites — not WebDriver, not CDP, not AT-SPI. This means anti-bot systems can't detect it because every click and keystroke goes through the exact same code path as a real human user.
+AxonSurf is a lightweight, undetectable browser automation toolkit written in 3,000 lines of C. It uses native GTK input events to interact with websites — not WebDriver, not CDP, not AT-SPI. This means anti-bot systems can't detect it because every click and keystroke goes through the exact same code path as a real human user.
 
 **Why it's special:**
 - 90KB binary (vs 200MB+ for Chrome/Chromium)
@@ -18,14 +18,14 @@ AxonBrowser is a lightweight, undetectable browser automation toolkit written in
 
 ### One-liner (Linux)
 ```bash
-bash <(curl -sSL https://raw.githubusercontent.com/Axon56/axonbrowser/master/install.sh)
+bash <(curl -sSL https://raw.githubusercontent.com/Axon56/axonsurf/master/install.sh)
 ```
 
 ### Manual install
 ```bash
 # Clone
-git clone https://github.com/Axon56/axonbrowser.git
-cd axonbrowser
+git clone https://github.com/Axon56/axonsurf.git
+cd axonsurf
 
 # Build
 mkdir build && cd build
@@ -47,19 +47,19 @@ sudo make install
 
 ```bash
 # Basic usage
-axonbrowser https://example.com
+axonsurf https://example.com
 
 # Headless (auto-starts Xvfb)
-axonbrowser --headless https://example.com
+axonsurf --headless https://example.com
 
 # With socket (for sending commands)
-axonbrowser --headless --socket /tmp/browser.sock
+axonsurf --headless --socket /tmp/browser.sock
 
 # With proxy
-axonbrowser --headless --proxy "http://user:pass@host:port"
+axonsurf --headless --proxy "http://user:pass@host:port"
 
 # Mobile viewport
-axonbrowser --headless --proxy "http://user:pass@host:port"
+axonsurf --headless --proxy "http://user:pass@host:port"
 # Then: viewport 390 844
 ```
 
@@ -71,10 +71,10 @@ Commands are sent via stdin or Unix socket:
 
 ```bash
 # Via stdin
-echo "goto https://example.com" | axonbrowser --headless
+echo "goto https://example.com" | axonsurf --headless
 
 # Via socket (persistent session)
-axonbrowser --headless --socket /tmp/browser.sock &
+axonsurf --headless --socket /tmp/browser.sock &
 echo "goto https://example.com" | socat - UNIX-CONNECT:/tmp/browser.sock
 echo "screenshot /tmp/page.png" | socat - UNIX-CONNECT:/tmp/browser.sock
 ```
@@ -211,7 +211,7 @@ echo "record-video stop" | socat - UNIX-CONNECT:/tmp/browser.sock
 
 ### Example 5: With proxy
 ```bash
-axonbrowser --headless --proxy "http://user:pass@host:port" --socket /tmp/browser.sock
+axonsurf --headless --proxy "http://user:pass@host:port" --socket /tmp/browser.sock
 ```
 
 ---
@@ -232,7 +232,7 @@ echo "humanize 75" | socat - UNIX-CONNECT:/tmp/browser.sock
 
 ---
 
-## How AxonBrowser Works
+## How AxonSurf Works
 
 1. **Command Parsing** — Commands are received via Unix socket or stdin
 2. **GTK Event Injection** — Commands are translated to native GDK events (GdkEventButton, GdkEventKey)
@@ -244,4 +244,4 @@ This is fundamentally different from:
 - **CDP/DevTools** — Uses Chrome DevTools Protocol (detectable)
 - **AT-SPI** — Uses accessibility API (flaky)
 
-AxonBrowser events are indistinguishable from real human input.
+AxonSurf events are indistinguishable from real human input.

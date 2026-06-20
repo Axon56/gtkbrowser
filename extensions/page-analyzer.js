@@ -25,5 +25,5 @@
             bodyText: document.body.innerText.substring(0, 500)
         };
     };
-    console.log('[AxonBrowser] Page analyzer ready. Use axonAnalyze()');
+    console.log('[AxonSurf] Page analyzer ready. Use axonAnalyze()');
 })();

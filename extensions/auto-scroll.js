@@ -12,5 +12,5 @@
         window.scrollTo(0, scrollY);
         if(scrollY >= document.body.scrollHeight) clearInterval(interval);
     }, 3000);
-    console.log('[AxonBrowser] Auto-scroll started');
+    console.log('[AxonSurf] Auto-scroll started');
 })();

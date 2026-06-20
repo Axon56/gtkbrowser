@@ -1,12 +1,12 @@
 #!/bin/bash
 set -e
 
-BINARY_NAME="axonbrowser"
+BINARY_NAME="axonsurf"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
-REPO="https://github.com/Axon56/axonbrowser.git"
-TMPDIR="/tmp/axonbrowser_install_$$"
+REPO="https://github.com/Axon56/axonsurf.git"
+TMPDIR="/tmp/axonsurf_install_$$"
 
-echo "🔧 AxonBrowser Installer"
+echo "🔧 AxonSurf Installer"
 echo "========================"
 echo ""
 
@@ -55,7 +55,7 @@ case $PKG_MANAGER in
 esac
 
 echo ""
-echo "📥 Cloning AxonBrowser..."
+echo "📥 Cloning AxonSurf..."
 rm -rf "$TMPDIR"
 git clone --depth 1 "$REPO" "$TMPDIR"
 
@@ -76,19 +76,19 @@ cd /
 rm -rf "$TMPDIR"
 
 # Verify installation
-if command -v axonbrowser &>/dev/null; then
+if command -v axonsurf &>/dev/null; then
     echo ""
-    echo "✅ AxonBrowser installed successfully!"
+    echo "✅ AxonSurf installed successfully!"
     echo ""
-    echo "   Binary: $(which axonbrowser)"
-    echo "   Version: $(axonbrowser --help 2>&1 | head -1 || echo 'unknown')"
+    echo "   Binary: $(which axonsurf)"
+    echo "   Version: $(axonsurf --help 2>&1 | head -1 || echo 'unknown')"
     echo ""
     echo "   Quick start:"
-    echo "     axonbrowser --headless https://example.com"
+    echo "     axonsurf --headless https://example.com"
     echo ""
 else
     echo ""
-    echo "⚠️  AxonBrowser installed to $INSTALL_DIR"
+    echo "⚠️  AxonSurf installed to $INSTALL_DIR"
     echo "   Add to PATH: export PATH=\"$INSTALL_DIR:\$PATH\""
     echo ""
     echo "   Quick start:"

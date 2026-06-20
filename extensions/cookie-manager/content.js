@@ -80,7 +80,7 @@
         return imported;
     }
 
-    // Expose API globally for AxonBrowser to access via eval
+    // Expose API globally for AxonSurf to access via eval
     window.axonCookies = {
         list: parseCookies,
         get: getCookie,
@@ -91,5 +91,5 @@
         import: importCookies
     };
 
-    console.log('[AxonBrowser] Cookie Manager loaded. Use window.axonCookies to manage cookies.');
+    console.log('[AxonSurf] Cookie Manager loaded. Use window.axonCookies to manage cookies.');
 })();

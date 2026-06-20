@@ -24,7 +24,7 @@ static char *get_home_dir(void) {
 
 char *profile_get_default_path(void) {
     char *home = get_home_dir();
-    char *path = g_strdup_printf("%s/.local/share/axonbrowser/default", home);
+    char *path = g_strdup_printf("%s/.local/share/axonsurf/default", home);
     g_free(home);
     return path;
 }
@@ -32,7 +32,7 @@ char *profile_get_default_path(void) {
 char *profile_get_path(const char *name) {
     if (!name) return profile_get_default_path();
     char *home = get_home_dir();
-    char *path = g_strdup_printf("%s/.local/share/axonbrowser/%s", home, name);
+    char *path = g_strdup_printf("%s/.local/share/axonsurf/%s", home, name);
     g_free(home);
     return path;
 }
@@ -64,7 +64,7 @@ void profile_init(WebKitWebContext *context, const char *data_dir) {
 
 char **profile_list(int *count) {
     char *home = get_home_dir();
-    char *base = g_strdup_printf("%s/.local/share/axonbrowser", home);
+    char *base = g_strdup_printf("%s/.local/share/axonsurf", home);
     g_free(home);
 
     ensure_dir(base);
@@ -118,7 +118,7 @@ bool profile_delete(const char *name) {
 void profile_set_user_agent(WebKitSettings *settings, const char *ua) {
     if (!settings || !ua) return;
     webkit_settings_set_user_agent_with_application_details(
-        settings, "AxonBrowser", "1.0");
+        settings, "AxonSurf", "1.0");
 }
 
 // Parse proxy URI and extract host, port, user, pass
@@ -178,10 +178,10 @@ static void on_authenticate(WebKitWebContext *context,
 
         webkit_authentication_request_authenticate(request, cred);
         webkit_credential_free(cred);
-        fprintf(stderr, "AxonBrowser: Proxy authenticated automatically\n");
+        fprintf(stderr, "AxonSurf: Proxy authenticated automatically\n");
     } else {
         webkit_authentication_request_cancel(request);
-        fprintf(stderr, "AxonBrowser: Proxy auth required but no credentials set\n");
+        fprintf(stderr, "AxonSurf: Proxy auth required but no credentials set\n");
     }
 }
 
@@ -216,7 +216,7 @@ void profile_set_proxy(WebKitWebContext *context, const char *proxy_uri) {
     webkit_network_proxy_settings_free(proxy_settings);
 
 
-    fprintf(stderr, "AxonBrowser: Proxy set to %s (user: %s)\n",
+    fprintf(stderr, "AxonSurf: Proxy set to %s (user: %s)\n",
             clean_proxy, user ? user : "(none)");
     g_free(host);
 }

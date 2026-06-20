@@ -1,5 +1,5 @@
 #!/bin/bash
-# AxonBrowser Test Suite
+# AxonSurf Test Suite
 SOCK="/tmp/gtk.sock"
 PASS=0
 FAIL=0
@@ -51,11 +51,11 @@ assert_not_empty() {
     fi
 }
 
-echo "🧪 AxonBrowser Test Suite"
+echo "🧪 AxonSurf Test Suite"
 echo "========================"
 
 # Setup
-pkill -f axonbrowser 2>/dev/null
+pkill -f axonsurf 2>/dev/null
 pkill -f Xvfb 2>/dev/null
 pkill -f openbox 2>/dev/null
 rm -f /tmp/.X99-lock /tmp/.X11-unix/X99 $SOCK
@@ -74,11 +74,11 @@ cd /home/gtkbrowser
 
 echo ""
 echo "🚀 BINARY TEST"
-echo "  ✅ $(./build/axonbrowser --help 2>&1 | head -1)"
+echo "  ✅ $(./build/axonsurf --help 2>&1 | head -1)"
 
 echo ""
 echo "🌐 SERVER TEST"
-./build/axonbrowser --headless --socket $SOCK 2>/dev/null &
+./build/axonsurf --headless --socket $SOCK 2>/dev/null &
 sleep 3
 assert_not_empty "Server starts" "$(send 'url')"
 
@@ -160,7 +160,7 @@ assert "record-video stop" "$(send 'record-video stop')" "ok"
 assert_not_empty "record-video file" "$(ls /tmp/test_record.mp4 2>&1)"
 
 # Cleanup
-pkill -f axonbrowser 2>/dev/null
+pkill -f axonsurf 2>/dev/null
 pkill -f openbox 2>/dev/null
 
 echo ""

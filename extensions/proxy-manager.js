@@ -13,10 +13,10 @@
         _current: null,
         _list: [],
 
-        // Set current proxy (use with AxonBrowser --proxy flag)
+        // Set current proxy (use with AxonSurf --proxy flag)
         set: function(proxy) {
             this._current = proxy;
-            console.log('[AxonBrowser] Proxy set to: ' + proxy);
+            console.log('[AxonSurf] Proxy set to: ' + proxy);
             return true;
         },
 
@@ -75,5 +75,5 @@
         }
     };
 
-    console.log('[AxonBrowser] Proxy Manager loaded. Use axonProxies');
+    console.log('[AxonSurf] Proxy Manager loaded. Use axonProxies');
 })();

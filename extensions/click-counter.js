@@ -9,7 +9,7 @@
     window.axonClickCount = 0;
     document.addEventListener('click', function(){
         window.axonClickCount++;
-        console.log('[AxonBrowser] Click #' + window.axonClickCount);
+        console.log('[AxonSurf] Click #' + window.axonClickCount);
     });
-    console.log('[AxonBrowser] Click counter active');
+    console.log('[AxonSurf] Click counter active');
 })();
