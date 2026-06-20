@@ -16,7 +16,7 @@ target/
 Thumbs.db
 
 # Debug
-core
+/core
 core.*
 *.core
 
