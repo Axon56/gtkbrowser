@@ -27,17 +27,6 @@ set(SOURCES
     src/page.c
 
     # Commands (command handlers)
-    src/commands/core.c
-    src/commands/navigation.c
-    src/commands/input.c
-    src/commands/elements.c
-    src/commands/screenshot.c
-    src/commands/tabs.c
-    src/commands/storage.c
-    src/commands/media.c
-    src/commands/monitoring.c
-    src/commands/extensions.c
-    src/commands/window.c
 
     # Feature implementations
     src/navigation/navigation.c
