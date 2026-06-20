@@ -1,102 +1,89 @@
-# AxonSurf 🌐
+# AxonSurf
 
-A lightweight, undetectable browser automation toolkit in 3,000 lines of C.
+**Native-input browser automation built on WebKitGTK.**
 
-AxonSurf drives browsers via **native GTK input events** — not WebDriver, not CDP, not AT-SPI. Clicks, typing, and input go through the exact same code path as a real human user. Anti-bot systems can't tell the difference.
+AxonSurf is a lightweight, high-performance browser automation tool that interacts with web pages through native OS input events — not JavaScript injection. This means it behaves exactly like a real user, making it harder to detect and more reliable for automation.
 
-## Quick Start
-
-```bash
-# Install dependencies
-./scripts/install-deps.sh
-
-# Build
-mkdir build && cd build
-cmake .. && make -j$(nproc)
-
-# Run headless (auto-starts Xvfb)
-./axonsurf --headless https://example.com
-
-# Run with interactive window
-./axonsurf https://example.com
-```
+---
 
 ## Features
 
-- **60+ commands** for full browser control
-- **Persistent socket** — multiple connections, long-running sessions
-- **Humanize gauge** (0-100) — realistic mouse movement, typing speed, delays
-- **Shadow DOM traversal** — finds elements inside shadow roots
-- **Auto-headless** — auto-installs Xvfb if missing
-- **Profile/cookie persistence** — sessions survive restarts
-- **Proxy support** — `--proxy socks5://...`
-- **User agent switching** — `--ua "..."`
-- **Mobile viewport emulation** — `viewport 375 812` (sets iPhone UA + responsive CSS)
-- **Screen recording** — record sessions as MP4 via ffmpeg
-- **Session recording** — record actions as reusable JSON scripts
-- **Network logging** — intercept fetch/XHR requests
-- **Accessibility audit** — WCAG compliance checking
-- **Performance monitoring** — timing and memory stats
-- **No WebDriver/CDP traces** — undetectable by anti-bot systems
+- **59 commands** — navigation, input, elements, screenshots, tabs, storage, monitoring, extensions
+- **Native input** — clicks and keystrokes via `xdotool`, not synthetic JS events
+- **Extension system** — drop `.js` files with `==GES==` headers, inject on any page
+- **Headless mode** — auto-starts Xvfb, no display required
+- **Persistent socket** — keeps state across commands, no startup penalty
+- **Proxy support** — per-session or per-request proxy rotation
+- **Video recording** — capture automation sessions as MP4
+- **Network monitoring** — log requests, measure performance, audit SSL
+- **Accessibility** — audit pages, traverse ARIA tree, find by role
 
-## CLI Usage
+---
+
+## Quick Start
+
+### Build
 
 ```bash
-# Headless with auto-Xvfb
-./axonsurf --headless https://example.com
+# Install dependencies
+sudo apt install libgtk-3-dev libwebkit2gtk-4.0-dev libjson-glib-dev libcurl4-openssl-dev
 
-# With proxy and custom user agent
-./axonsurf --proxy socks5://127.0.0.1:1080 --ua "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)"
-
-# With humanization level 75
-./axonsurf --humanize 75
-
-# Persistent profile
-./axonsurf --profile mybot --humanize 50
-
-# Interactive window
-./axonsurf https://example.com
+# Build
+git clone https://github.com/Axon56/axonsurf.git
+cd axonsurf
+mkdir build && cd build
+cmake .. && make -j$(nproc)
 ```
 
-### CLI Flags
-
-| Flag | Description |
-|------|-------------|
-| `--headless` | Run without visible window (auto-starts Xvfb) |
-| `--width <px>` | Window width (default: 1280) |
-| `--height <px>` | Window height (default: 800) |
-| `--socket <path>` | Command socket path (default: stdin) |
-| `--profile <name>` | Persistent profile for cookies/session |
-| `--humanize <0-100>` | Humanization level at launch |
-| `--proxy <uri>` | HTTP/SOCKS5 proxy |
-| `--ua <string>` | Custom user agent |
-| `--help` | Show help |
-
-## Command Interface
-
-Send commands via **stdin** or **Unix socket**:
+### Run
 
 ```bash
-# Via stdin
-echo "goto https://example.com" | ./axonsurf --headless
+# Windowed mode
+./build/axonsurf
 
-# Via socket
-./axonsurf --socket /tmp/browser.sock
-echo "goto https://example.com" | socat - UNIX-CONNECT:/tmp/browser.sock
+# Headless mode (auto-starts Xvfb)
+./build/axonsurf --headless
+
+# With proxy
+./build/axonsurf --headless --proxy "http://user:pass@host:port"
+
+# With custom socket
+./build/axonsurf --headless --socket /tmp/my.sock
 ```
+
+### CLI Tool
+
+```bash
+# Install the CLI
+cp axonsurf /usr/local/bin/axonsurf
+
+# Use it
+axonsurf goto https://google.com
+axonsurf click 400 300
+axonsurf type "hello world"
+axonsurf screenshot page.png
+axonsurf eval "document.title"
+```
+
+---
+
+## Commands
 
 ### Navigation
 
 | Command | Description |
 |---------|-------------|
 | `goto <url>` | Navigate to URL |
-| `back` | Go back in history |
-| `forward` | Go forward in history |
-| `history` | Get history length and current index |
-| `history-goto <index>` | Navigate to history item |
+| `back` | Go back |
+| `forward` | Go forward |
 | `url` | Get current URL |
 | `title` | Get page title |
-| `close` | Close the browser |
+| `text` | Get page text content |
+| `content` | Get page HTML |
+| `scroll <x> <y>` | Scroll by pixels |
+| `scrollto <selector>` | Scroll to element |
+| `history` | Get navigation history |
+| `history-goto <index>` | Navigate to history index |
 
 ### Input
 
@@ -104,51 +91,44 @@ echo "goto https://example.com" | socat - UNIX-CONNECT:/tmp/browser.sock
 |---------|-------------|
 | `click <x> <y>` | Click at coordinates |
 | `click <selector>` | Click element by CSS selector |
-| `doubleclick <x> <y>` | Double-click |
-| `rightclick <x> <y>` | Right-click |
+| `doubleclick <x> <y>` | Double-click at coordinates |
+| `rightclick <x> <y>` | Right-click at coordinates |
+| `type <text>` | Type text at cursor |
+| `typeinto <selector> <text>` | Click element and type |
+| `key <key>` | Press a key (Enter, Tab, Escape, etc.) |
 | `hover <selector>` | Hover over element |
-| `type <text>` | Type text |
-| `key <keyname>` | Press key (Return, Tab, Escape, etc.) |
-| `typeinto <selector> <text>` | Click element and type into it |
-| `mousedown <x> <y>` | Mouse down (hold) |
-| `mouseup <x> <y>` | Mouse up (release) |
-| `drag <sx> <sy> <ex> <ey>` | Drag and drop |
+| `drag <from> <to>` | Drag between coordinates |
 
 ### Elements
 
 | Command | Description |
 |---------|-------------|
-| `find <selector>` | Find element by CSS selector |
-| `elements` / `els` | List all interactive elements |
-| `role-find <Role:Name>` | Find by accessibility role |
-| `role-click <Role:Name>` | Click by accessibility role |
-| `role-type <Role:Name> <text>` | Type by accessibility role |
-| `read <selector>` | Read element text |
-| `read <selector> --value` | Read input value |
+| `find <selector>` | Find element, return position |
+| `elements` | List all interactive elements |
 | `count <selector>` | Count matching elements |
-| `inspect` | Full accessibility tree dump |
-| `find-text <text>` | Search page content |
-| `find-text <text> --highlight` | Search and highlight |
+| `read <selector>` | Read element text content |
+| `find-text <text>` | Find element containing text |
+| `find-count <selector>` | Count visible elements |
+| `role-click <role>` | Click element by ARIA role |
+| `role-type <role> <text>` | Type into element by role |
+| `role-find <role>` | Find element by ARIA role |
+| `inspect` | Get accessibility tree |
+| `a11y-audit` | Run accessibility audit |
 
-### Screenshot
+### Screenshots & Media
 
 | Command | Description |
 |---------|-------------|
 | `screenshot <file>` | Full page screenshot |
-| `screenshot viewport <file>` | Viewport only |
-| `screenshot fullpage <file>` | Full scrollable page |
-| `screenshot element <sel> <file>` | Specific element |
-
-### Wait
-
-| Command | Description |
-|---------|-------------|
-| `waitfor <selector> <ms>` | Wait for element to appear |
-| `waitload <ms>` | Wait for page to finish loading |
-| `wait <text>` | Wait for text to appear |
-| `wait --text "X" --disappear` | Wait for text to disappear |
-| `wait --url-contains "X"` | Wait for URL change |
-| `wait <sel> --state focused` | Wait for element state |
+| `screenshot viewport <file>` | Viewport-only screenshot |
+| `pdf <file>` | Export page as PDF |
+| `upload <selector> <file>` | Upload file to input |
+| `check <selector>` | Check a checkbox |
+| `uncheck <selector>` | Uncheck a checkbox |
+| `is-checked <selector>` | Check if checkbox is checked |
+| `record start <file> [fps]` | Start recording |
+| `record stop` | Stop recording |
+| `record status` | Check recording status |
 
 ### Tabs
 
@@ -158,168 +138,144 @@ echo "goto https://example.com" | socat - UNIX-CONNECT:/tmp/browser.sock
 | `newtab [url]` | Open new tab |
 | `tab <index>` | Switch to tab |
 | `closetab <index>` | Close tab |
-| Any command `--tab <n>` | Run command in specific tab |
 
 ### Storage
 
 | Command | Description |
 |---------|-------------|
-| `ls-get <key>` | Get localStorage value |
-| `ls-set <key> <value>` | Set localStorage value |
-| `ls-all` | Get all localStorage items |
-| `ss-get <key>` | Get sessionStorage value |
-| `ss-set <key> <value>` | Set sessionStorage value |
+| `ls-set <key> <value>` | Set localStorage |
+| `ls-get <key>` | Get localStorage |
+| `ls-all` | Get all localStorage |
+| `ss-set <key> <value>` | Set sessionStorage |
+| `ss-get <key>` | Get sessionStorage |
 
-### Monitoring & Debug
+### Extensions
 
 | Command | Description |
 |---------|-------------|
-| `net-log` | Start network request logging |
+| `extension-load <dir>` | Load extensions from directory |
+| `extension-inject` | Inject loaded extensions |
+| `extension-list` | List loaded extensions |
+| `extension-count` | Count loaded extensions |
+| `extension-unload <name>` | Unload an extension |
+
+### Monitoring
+
+| Command | Description |
+|---------|-------------|
+| `net-log` | Start network logging |
 | `net-stop` | Stop network logging |
 | `net-requests` | Get logged requests |
 | `perf-timing` | Get page load timing |
 | `perf-memory` | Get memory usage |
-| `a11y` | Accessibility tree |
-| `a11y-audit` | WCAG compliance check |
-| `ssl` | SSL/protocol info |
-| `downloads` | Find downloadable links |
+| `ssl` | Get SSL info |
+| `downloads` | Get download list |
 
-### Session Recording
-
-| Command | Description |
-|---------|-------------|
-| `record` | Start recording user actions |
-| `stop-recording` | Stop recording |
-| `get-recording` | Get recorded actions as JSON |
-| `record-video start <file> [fps]` | Start screen recording (MP4) |
-| `record-video stop` | Stop and save recording |
-| `record-video status` | Check recording status |
-
-### Dialogs
-
-| Command | Description |
-|---------|-------------|
-| `dialog accept` | Accept alert/confirm |
-| `dialog dismiss` | Dismiss alert/confirm |
-| `dialog-auto accept` | Auto-accept all dialogs |
-| `dialogs` | List pending dialogs |
-| `dialog-clear` | Clear dialog queue |
-
-### Clipboard
-
-| Command | Description |
-|---------|-------------|
-| `clipboard read` | Read system clipboard |
-| `clipboard write <text>` | Write to clipboard |
-
-### Window
+### Window & Other
 
 | Command | Description |
 |---------|-------------|
 | `resize <w> <h>` | Resize window |
-| `viewport <w> <h>` | Set viewport (resizes + sets mobile UA + reloads) |
-| `maximize` | Maximize window |
-| `minimize` | Minimize window |
-| `fullscreen` | Enter fullscreen |
-| `unfullscreen` | Exit fullscreen |
-| `center` | Center window |
-
-### Humanization
-
-| Command | Description |
-|---------|-------------|
-| `humanize <0-100>` | Set humanization level |
-
-Levels:
-- **0** — Robotic: instant, no delays
-- **25** — Fast: slight delays, no mouse movement
-- **50** — Moderate: realistic delays, basic mouse path
-- **75** — Slow: longer delays, smooth mouse curves
-- **100** — Human: full mimicry with pauses and jitter
-
-### Forms
-
-| Command | Description |
-|---------|-------------|
-| `check <selector>` | Check a checkbox/radio button |
-| `uncheck <selector>` | Uncheck a checkbox |
-| `is-checked <selector>` | Check if element is checked |
-| `upload <selector> <file>` | Upload a file to file input |
-
-### Other
-
-| Command | Description |
-|---------|-------------|
+| `viewport <w> <h>` | Set viewport size |
 | `eval <js>` | Execute JavaScript |
-| `text` | Get page text content |
-| `content` / `content outer` | Get page HTML |
-| `frames` | List all iframes |
-| `scroll <dx> <dy>` | Scroll by delta |
-| `scrollto <selector>` | Scroll element into view |
-| `focus <selector>` | Focus element |
-| `pdf <file>` | Export page as HTML |
-| `submit-and-wait` | Click + wait combined |
-| `click-and-wait` | Click + wait combined |
-| `help` | List all commands |
+| `wait <ms>` | Wait milliseconds |
+| `waitload` | Wait for page load |
+| `waitfor <selector>` | Wait for element |
+| `clipboard read` | Read clipboard |
+| `clipboard write <text>` | Write to clipboard |
+| `dismiss` | Dismiss cookie/overlay popups |
+| `humanize <text>` | Convert to human-like input |
+| `help` | Show all commands |
+
+---
+
+## Creating Extensions
+
+Drop a `.js` file into `~/.config/axonsurf/extensions/` or any directory:
+
+```javascript
+// ==GES==
+// @name        My Extension
+// @version     1.0.0
+// @description Does something useful
+// @match       https://*/*
+// @run-at      document-end
+// ==/GES==
+
+(function() {
+    window.myAPI = {
+        doSomething: function() {
+            return "Hello from extension!";
+        }
+    };
+    console.log('[AxonSurf] My Extension loaded');
+})();
+```
+
+Then:
+```bash
+axonsurf extension-load ~/.config/axonsurf/extensions
+axonsurf extension-inject
+axonsurf eval "myAPI.doSomething()"
+```
+
+### Example Extensions
+
+| Extension | Description |
+|-----------|-------------|
+| `cookie-manager.js` | Read, edit, delete cookies |
+| `proxy-manager.js` | Manage proxy rotation |
+| `page-analyzer.js` | Analyze page structure |
+| `form-filler.js` | Auto-fill forms |
+| `click-counter.js` | Count clicks |
+| `color-changer.js` | Modify page colors |
+| `auto-scroll.js` | Auto-scroll pages |
+
+---
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `AXON_SOCK` | Socket path (default: `/tmp/gtk.sock`) |
+| `AXON_PROXY` | Proxy URL |
+| `AXON_UA` | Custom User-Agent |
+
+---
 
 ## Architecture
 
 ```
-axonsurf/
-├── src/
-│   ├── main.c          — entry point, CLI args
-│   ├── browser.c/.h    — GTK window, tabs, WebKit
-│   ├── command.c/.h    — command parser, persistent socket
-│   ├── input.c/.h      — native GTK input events
-│   ├── page.c/.h       — JS eval, elements, storage, recording, perf, audit
-│   ├── screenshot.c/.h — screenshots (X11 import)
-│   ├── humanize.c/.h   — realistic mouse/typing simulation
-│   ├── headless.c/.h   — auto-Xvfb management
-│   ├── profile.c/.h    — cookie persistence, proxy, user agent
-│   └── video.c/.h      — screen recording (ffmpeg x11grab)
-├── scripts/
-│   ├── install-deps.sh — auto-install dependencies
-│   └── run-headless.sh — launch headless session
-├── CMakeLists.txt
-└── README.md
+src/
+├── core/           Main entry, browser state, command dispatcher
+├── commands/       Command modules (navigation, input, elements, etc.)
+├── navigation/     Back/forward/history
+├── elements/       DOM queries, ARIA roles, accessibility
+├── input/          Mouse/keyboard via xdotool, text humanization
+├── monitor/        Network logging, performance, SSL
+├── media/          Screenshots, video, clipboard
+├── storage/        Profiles, cookies, local/session storage
+├── extensions/     GES extension loader
+├── headless/       Auto Xvfb management
+└── ui/             GTK GUI shell
 ```
 
-## How It Works
-
-AxonSurf uses **native GTK input events** at the widget level:
-
-```
-Your command → Unix socket → AxonSurf
-  → GdkEventButton/GdkEventKey
-  → WebKit processes as real input
-  → DOM receives native MouseEvent/KeyboardEvent
-  → event.isTrusted = true ✅
-```
-
-This is fundamentally different from:
-- **Playwright/Selenium** — uses WebDriver (navigator.webdriver = true)
-- **CDP/DevTools** — uses Chrome DevTools Protocol (detectable)
-- **AT-SPI** — uses accessibility API (flaky, requires display server)
-
-AxonSurf events go through the same code path as a real mouse click from the OS. Anti-bot systems cannot distinguish them from human input.
-
-## Comparison
-
-| Feature | AxonSurf | Playwright | CDP |
-|---------|-----------|------------|-----|
-| Binary size | 90KB | ~350MB | ~200MB |
-| navigator.webdriver | false ✅ | true ❌ | true ❌ |
-| event.isTrusted | true ✅ | true ✅ | true ✅ |
-| CDP traces | none ✅ | none ✅ | present ❌ |
-| Dependencies | GTK3+WebKit | Node.js | Chrome |
-| Humanize gauge | ✅ 0-100 | ❌ | ❌ |
-| Shadow DOM | ✅ | ✅ | ✅ |
-| Session recording | ✅ | ❌ | ❌ |
-| Screen recording | ✅ MP4 | ❌ | ❌ |
-| Mobile viewport | ✅ auto UA | ✅ | ✅ |
-| Network logging | ✅ | ✅ | ✅ |
-| Auto-headless | ✅ auto-install | ❌ needs setup | ❌ needs Chrome |
+---
 
 ## License
 
 MIT
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -am 'Add my feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Open a Pull Request
+
+---
+
+Built with ❤️ by [Ay](https://github.com/Axon56)
