@@ -21,7 +21,7 @@ is_running() {
 # Start browser if not running
 ensure_running() {
     if ! is_running; then
-        axonsurf $FLAGS --socket "$SOCK" &
+        axonsurf --headless $FLAGS --socket "$SOCK" &
         sleep 2
         echo "started" >&2
     fi
