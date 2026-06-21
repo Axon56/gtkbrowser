@@ -29,7 +29,7 @@ AxonSurf is a lightweight, high-performance browser automation tool that interac
 sudo apt install libgtk-3-dev libwebkit2gtk-4.0-dev libjson-glib-dev libcurl4-openssl-dev
 
 # Build
-git clone https://github.com/Axon56/axonsurf.git
+git clone https://github.com/ayomidelog/AxonSurf.git
 cd axonsurf
 mkdir build && cd build
 cmake .. && make -j$(nproc)
